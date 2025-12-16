@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithPopup } from "firebase/auth";
 import { auth } from "../firebase";
 
 const LoginPage = () => {
@@ -10,13 +10,19 @@ const LoginPage = () => {
   const handleLogin = (e) => {
     e.preventDefault();
 //    alert(`Login function will be handled by teammate\nEmail: ${email}\nPassword: ${password}`);
-		signInWithEmailAndPassword(auth, email, password)
-		.then((userCredential) => {
-			const user = userCredential.user;
-			})
-		.catch((error) => {
-			console.log(`Error ${error.code}: ${error.message}.`);
-		});
+		const res = email.endsWith("@cet.ac.in");
+		if (res === true){
+			signInWithPopup(auth, googleProvider)
+				.then((result) => {
+					const email = result.user.email;
+					if (!email.endsWith("@cet.ac.in")) {
+						signOut(auth);
+						alert("Only CET emails allowed");
+					}
+				});
+		} else {
+			alert(`Only @cet.ac.in email addresses are accepted for now!!`);
+		}
   };
 
   return (
