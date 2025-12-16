@@ -18,7 +18,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 // It needs to be edited into whatever is needed for Firebase Auth.
 
 const App = () => {
-  const app = initializeApp(fireConf());
   const { currentPage, params, navigate } = useRouter();
   const [events, setEvents] = useState(EVENTS_DATA);
 
