@@ -1,6 +1,3 @@
-import React, { useState } from 'react';
-import { initializeApp } from 'firebase/App';
-
 import { db } from "./firebase";
 console.log("Firestore connected:", db);
 
@@ -13,9 +10,6 @@ import LoginPage from "./pages/LoginPage";
 import EventsTimelinePage from "./pages/EventsTimelinePage";
 import EventDetailPage from "./pages/EventDetailPage";
 import AdminDashboard from "./pages/AdminDashboard";
-
-// This page is right now a simplified page for the functionality needed to reroute into a Login page.
-// It needs to be edited into whatever is needed for Firebase Auth.
 
 const App = () => {
   const { currentPage, params, navigate } = useRouter();

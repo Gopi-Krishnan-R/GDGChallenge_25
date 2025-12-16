@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -7,7 +9,14 @@ const LoginPage = () => {
   // Placeholder login function
   const handleLogin = (e) => {
     e.preventDefault();
-    alert(`Login function will be handled by teammate\nEmail: ${email}\nPassword: ${password}`);
+//    alert(`Login function will be handled by teammate\nEmail: ${email}\nPassword: ${password}`);
+		signInWithEmailAndPassword(auth, email, password)
+		.then((userCredential) => {
+			const user = userCredential.user;
+			})
+		.catch((error) => {
+			console.log(`Error ${error.code}: ${error.message}.`);
+		});
   };
 
   return (
@@ -53,3 +62,6 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
+// Create New User.
+// import { createUserWithEmailAndPassword } from "firebase/auth";
