@@ -9,5 +9,7 @@ Run
 to get the dependencies up and running.
 
 Also, don't forget to
-> git pull 
+
+> git pull origin main
+
 the repo before pushing, in order to avoid merge conflicts as much as possible :)
