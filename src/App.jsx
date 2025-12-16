@@ -1,10 +1,8 @@
-<<<<<<< HEAD
 import React, { useState } from 'react';
 import { initializeApp } from 'firebase/App';
-=======
+
 import { db } from "./firebase";
 console.log("Firestore connected:", db);
->>>>>>> 30f66f5 (Update LandingPage, App.jsx, add LoginPage and fix router)
 
 import React, { useState } from "react";
 import { EVENTS_DATA } from "./data/events";
@@ -20,6 +18,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 // It needs to be edited into whatever is needed for Firebase Auth.
 
 const App = () => {
+  const app = initializeApp(fireConf());
   const { currentPage, params, navigate } = useRouter();
   const [events, setEvents] = useState(EVENTS_DATA);
 
