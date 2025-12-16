@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const LandingPage = ({ navigate }) => {
   return (
@@ -18,19 +18,12 @@ const LandingPage = ({ navigate }) => {
           filtering and priority indicators.
         </p>
 
-        <div className="flex gap-4 justify-center">
+        <div className="flex justify-center">
           <button
-            onClick={() => navigate('events')}
-            className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 font-medium"
+            onClick={() => navigate("login")} // Navigate to login page
+            className="bg-blue-600 text-white px-8 py-3 rounded hover:bg-blue-700 font-medium"
           >
-            View Events
-          </button>
-
-          <button
-            onClick={() => navigate('admin')}
-            className="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 font-medium"
-          >
-            Admin Login
+            Sign In
           </button>
         </div>
       </div>
