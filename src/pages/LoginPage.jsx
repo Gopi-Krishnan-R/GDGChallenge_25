@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { signInWithPopup } from "firebase/auth";
-import { auth } from "../firebase";
+import { signInWithPopup, signOut, GoogleAuthProvider} from "firebase/auth";
+import { auth, db } from "../firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+	const googleProvider = new GoogleAuthProvider();
 
   // Placeholder login function
-  const handleLogin = (e) => {
-    e.preventDefault();
+	const handleLogin = (e) => {
+		e.preventDefault();
 //    alert(`Login function will be handled by teammate\nEmail: ${email}\nPassword: ${password}`);
 		const res = email.endsWith("@cet.ac.in");
 		if (res === true){
@@ -22,10 +24,26 @@ const LoginPage = () => {
 				});
 		} else {
 			alert(`Only @cet.ac.in email addresses are accepted for now!!`);
+		} 
+	};
+	const testFirestore = async () => {
+		try {
+			console.log("Attempting Firestore write");
+			await addDoc(collection(db, "test"), {
+				hello: "world",
+				createdAt: new Date(),
+			});
+			console.log("Firestore write successful");
+		} catch (err) {
+			console.error("Firestore error:", err);
+			console.error("Firestore error code:", err.code);
+			console.error("Firestore error message:", err.message);
+			alert("Firestore error — check console");
 		}
-  };
+	};
 
-  return (
+
+return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
@@ -61,6 +79,9 @@ const LoginPage = () => {
           >
             Login
           </button>
+					<button type="button" onClick={testFirestore}>
+						Test Firestore
+					</button>
         </form>
       </div>
     </div>
