@@ -17,7 +17,7 @@ const LoginPage = () => {
 					const email = result.user.email;
 					if (!email.endsWith("@cet.ac.in")) {
 						signOut(auth);
-						alert("Only CET emails allowed");
+						alert(`Only CET emails allowed`);
 					}
 				});
 		} else {
