@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { EVENTS_DATA } from "./data/events";
 import { useRouter } from "./hooks/useRouter";
 
+import SignupPage from "./pages/SignupPage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import EventsTimelinePage from "./pages/EventsTimelinePage";
@@ -30,6 +31,8 @@ const App = () => {
 
       {/* Login Page */}
       {currentPage === "login" && <LoginPage navigate={navigate} />}
+
+			{currentPage === "signup" && <SignupPage navigate={navigate} />}
 
       {/* Events Timeline */}
       {currentPage === "events" && (

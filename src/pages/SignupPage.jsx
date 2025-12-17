@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { ref, update } from "firebase/database";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { ref, set } from "firebase/database";
 import { auth, db_log } from "../firebase";
 
-const LoginPage = ({ navigate }) => {
+const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleLogin = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
 
     if (!email.endsWith("@cet.ac.in")) {
@@ -15,19 +16,35 @@ const LoginPage = ({ navigate }) => {
       return;
     }
 
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
       const user = result.user;
 
-      await update(ref(db_log, `users/${user.uid}`), {
+      await set(ref(db_log, `users/${user.uid}`), {
+        email: user.email,
+        role: "user",
+        createdAt: Date.now(),
         lastLogin: Date.now(),
       });
+
+      alert("Account created successfully. You can now log in.");
     } catch (error) {
-      if (error.code === "auth/user-not-found") {
-        alert("Account does not exist. Please sign up first.");
-      } else {
-        alert(error.message);
-      }
+      alert(error.message);
     }
   };
 
@@ -35,10 +52,10 @@ const LoginPage = ({ navigate }) => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-8">
         <h1 className="text-2xl font-bold text-center mb-6">
-          CET Event Portal
+          Create CET Account
         </h1>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSignup} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email
@@ -61,7 +78,21 @@ const LoginPage = ({ navigate }) => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder="Minimum 6 characters"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter password"
               className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -69,17 +100,9 @@ const LoginPage = ({ navigate }) => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition"
+            className="w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700 transition"
           >
-            Login
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("signup")}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            Create an account
+            Sign Up
           </button>
         </form>
 
@@ -92,6 +115,4 @@ const LoginPage = ({ navigate }) => {
   );
 };
 
-export default LoginPage;
-// Create New User.
-// import { createUserWithEmailAndPassword } from "firebase/auth";
+export default SignupPage;
