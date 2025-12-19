@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth, db_log } from "../firebase/firebase";
+import { auth } from "../firebase/firebase";
 
 const LoginPage = ({ navigate }) => {
   const [email, setEmail] = useState("");
@@ -20,8 +20,8 @@ const LoginPage = ({ navigate }) => {
 
       navigate("events");
     } catch (error) {
-      if (error.code === "auth/user-not-found") {
-        alert("Account does not exist. Please sign up first.");
+      if (error.code === "auth/invalid-credentials") {
+        alert("Account does not exist or incorrect credentials. Please sign up first or type in the right credentials.");
       } else {
         alert(error.message);
       }
@@ -101,5 +101,3 @@ const LoginPage = ({ navigate }) => {
 };
 
 export default LoginPage;
-// Create New User.
-// import { createUserWithEmailAndPassword } from "firebase/auth";
