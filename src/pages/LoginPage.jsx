@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { ref, update } from "firebase/database";
 import { auth, db_log } from "../firebase/firebase";
 
 const LoginPage = ({ navigate }) => {
