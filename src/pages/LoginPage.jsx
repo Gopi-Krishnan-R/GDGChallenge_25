@@ -38,7 +38,7 @@ const LoginPage = ({ navigate }) => {
           CET Event Portal
         </h1>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={()=>navigate("events")} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email
