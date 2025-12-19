@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { ref, update } from "firebase/database";
-import { auth, db_log } from "../firebase";
+import { auth, db_log } from "../firebase/firebase";
 
 const LoginPage = ({ navigate }) => {
   const [email, setEmail] = useState("");
@@ -19,9 +19,7 @@ const LoginPage = ({ navigate }) => {
       const result = await signInWithEmailAndPassword(auth, email, password);
       const user = result.user;
 
-      await update(ref(db_log, `users/${user.uid}`), {
-        lastLogin: Date.now(),
-      });
+      navigate("events");
     } catch (error) {
       if (error.code === "auth/user-not-found") {
         alert("Account does not exist. Please sign up first.");
@@ -38,7 +36,7 @@ const LoginPage = ({ navigate }) => {
           CET Event Portal
         </h1>
 
-        <form onSubmit={()=>navigate("events")} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email
@@ -73,17 +71,17 @@ const LoginPage = ({ navigate }) => {
           >
             Login
           </button>
-	  	<div className="bg-white border-b border-gray-200 px-6 py-4">
-			<div className="max-w-4l mx-auto flex justify-between">
-				<h1 className="text-2l font-bold">Admin Dashboard</h1>
-					<button
-						onClick={() => navigate('admin')}
-						className="text-sm text-gray-600"
-					>
-					Click here
-					</button>
-			</div>
-		</div>
+          <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <div className="max-w-4l mx-auto flex justify-between">
+              <h1 className="text-2l font-bold">Admin Dashboard</h1>
+              <button
+                onClick={() => navigate('admin')}
+                className="text-sm text-gray-600"
+              >
+                Click here
+              </button>
+            </div>
+          </div>
 
           <button
             type="button"

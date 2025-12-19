@@ -1,4 +1,4 @@
-import { db } from "./firebase";
+import { db } from "./firebase/firebase";
 console.log("Firestore connected:", db);
 
 import React, { useState } from "react";
@@ -32,7 +32,7 @@ const App = () => {
       {/* Login Page */}
       {currentPage === "login" && <LoginPage navigate={navigate} />}
 
-			{currentPage === "signup" && <SignupPage navigate={navigate} />}
+      {currentPage === "signup" && <SignupPage navigate={navigate} />}
 
       {/* Events Timeline */}
       {currentPage === "events" && (
