@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { ref, set } from "firebase/database";
-import { auth, db_log } from "../firebase";
+import { auth } from "../firebase/firebase";
 
-const SignupPage = () => {
+const SignupPage = ({ navigate }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,14 +33,6 @@ const SignupPage = () => {
       );
 
       const user = result.user;
-
-      await set(ref(db_log, `users/${user.uid}`), {
-        email: user.email,
-        role: "user",
-        createdAt: Date.now(),
-        lastLogin: Date.now(),
-      });
-
       alert("Account created successfully. You can now log in.");
     } catch (error) {
       alert(error.message);
@@ -51,6 +42,13 @@ const SignupPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-8">
+        <button
+            onClick={() => navigate('login')}
+            className="text-sm text-gray-600 hover:text-gray-900"
+          >
+            ← Back to Login
+          </button>
+
         <h1 className="text-2xl font-bold text-center mb-6">
           Create CET Account
         </h1>

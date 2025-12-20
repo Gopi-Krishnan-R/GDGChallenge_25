@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { ref, update } from "firebase/database";
-import { auth, db_log } from "../firebase";
+import { auth } from "../firebase/firebase";
 
 const LoginPage = ({ navigate }) => {
   const [email, setEmail] = useState("");
@@ -19,12 +18,10 @@ const LoginPage = ({ navigate }) => {
       const result = await signInWithEmailAndPassword(auth, email, password);
       const user = result.user;
 
-      await update(ref(db_log, `users/${user.uid}`), {
-        lastLogin: Date.now(),
-      });
+      navigate("events");
     } catch (error) {
-      if (error.code === "auth/user-not-found") {
-        alert("Account does not exist. Please sign up first.");
+      if (error.code === "auth/invalid-credentials") {
+        alert("Account does not exist or incorrect credentials. Please sign up first or type in the right credentials.");
       } else {
         alert(error.message);
       }
@@ -73,6 +70,17 @@ const LoginPage = ({ navigate }) => {
           >
             Login
           </button>
+          <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <div className="max-w-4xl mx-auto flex justify-between">
+              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+              <button
+                onClick={() => navigate('admin')}
+                className="text-sm text-gray-600"
+              >
+                Click here
+              </button>
+            </div>
+          </div>
 
           <button
             type="button"
@@ -93,5 +101,3 @@ const LoginPage = ({ navigate }) => {
 };
 
 export default LoginPage;
-// Create New User.
-// import { createUserWithEmailAndPassword } from "firebase/auth";
