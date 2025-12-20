@@ -33,7 +33,7 @@ const OnboardingPage = ({ navigate }) => {
       });
 
       // Navigate to the Events Timeline
-      navigate("events"); 
+      navigate("events");
     } catch (error) {
       console.error("Error saving profile:", error);
       alert("Failed to save profile. Please try again.");
@@ -125,11 +125,35 @@ const OnboardingPage = ({ navigate }) => {
                 required
                 type="number"
                 placeholder="2026"
-                min="2024"
+                min={new Date().getFullYear()}
                 max="2032"
                 className={inputStyle}
                 value={formData.gradYear}
-                onChange={(e) => setFormData({ ...formData, gradYear: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  // Allow clearing the field
+                  if (value === "") {
+                    setFormData({ ...formData, gradYear: "" });
+                    return;
+                  }
+
+                  // Only allow up to 4 numeric characters
+                  if (!/^\d{0,4}$/.test(value)) {
+                    return;
+                  }
+
+                  // When 4 digits are entered, enforce the valid range
+                  if (value.length === 4) {
+                    const year = Number(value);
+                    const currentYear = new Date().getFullYear();
+                    if (year < currentYear || year > 2032) {
+                      return;
+                    }
+                  }
+
+                  setFormData({ ...formData, gradYear: value });
+                }}
               />
             </div>
           </div>
