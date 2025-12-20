@@ -22,7 +22,7 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
 
   const processWithAI = () => {
     if (!eventTitle.trim() || !rawText.trim()) {
-      setError('Please enter both event title and details.');
+      setError('Please enter both event title and event details.');
       return;
     }
     setError('');
@@ -35,6 +35,12 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
         description_ai: rawText,
         summary_ai: rawText.split('.').slice(0, 2).join('.') + '.',
         department_tags: ['College Event', 'Notice'],
+        event_type: 'general',
+        start_time: new Date().toISOString(),
+        end_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        venue: 'TBD',
+        priority: 'normal',
+        created_at: new Date().toISOString(),
       };
       setProcessedEvent(mockEvent);
       setIsProcessing(false);
@@ -65,7 +71,7 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
     setTimeout(() => {
       setProcessedEvent(prev => ({
         ...prev,
-        summary_ai: `[Refined]: ${prev.summary_ai} (Adjusted based on feedback: ${feedbackText})`,
+        summary_ai: feedbackText.trim(),
       }));
       setFeedbackText('');
       setShowFeedback(false);
@@ -74,7 +80,7 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
   };
 
   const publishEvent = () => {
-    onPublishEvent?.(processedEvent);
+    onPublishEvent(processedEvent);
     setShowModal(false);
     handleReset();
     alert('Event published successfully!');
@@ -122,7 +128,10 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
               <input
                 type="text"
                 value={eventTitle}
-                onChange={(e) => setEventTitle(e.target.value)}
+                onChange={(e) => {
+                  setEventTitle(e.target.value);
+                  setError('');
+                }}
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                 placeholder="Enter event title..."
               />
@@ -131,7 +140,10 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
               <label className="block text-sm font-semibold text-slate-700 mb-2">Event Details</label>
               <textarea
                 value={rawText}
-                onChange={(e) => setRawText(e.target.value)}
+                onChange={(e) => {
+                  setRawText(e.target.value);
+                  setError('');
+                }}
                 className="w-full h-48 p-4 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none"
                 placeholder="Paste the full description or raw notes here..."
               />
@@ -156,14 +168,25 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
       {/* MODAL WINDOW */}
       {showModal && processedEvent && (
         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div
+            className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-dashboard-modal-title"
+          >
             
             <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h3 className="text-xl font-bold flex items-center gap-2">
+              <h3 id="admin-dashboard-modal-title" className="text-xl font-bold flex items-center gap-2">
                 <Sparkles className="text-indigo-600" size={20} />
                 {showFeedback ? 'Refine AI Output' : 'Preview Generated Event'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                aria-label="Close modal"
+              >
+                <X size={20} />
+              </button>
             </div>
 
             <div className="p-6">

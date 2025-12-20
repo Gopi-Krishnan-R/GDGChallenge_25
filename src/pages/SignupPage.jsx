@@ -33,7 +33,7 @@ const SignupPage = ({ navigate }) => {
       );
 
       const user = result.user;
-     navigate("onboarding");
+      navigate("onboarding");
     } catch (error) {
       alert(error.message);
     }
