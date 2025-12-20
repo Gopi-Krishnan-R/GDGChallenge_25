@@ -11,6 +11,7 @@ import LoginPage from "./pages/LoginPage";
 import EventsTimelinePage from "./pages/EventsTimelinePage";
 import EventDetailPage from "./pages/EventDetailPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import OnboardingPage from "./pages/OnboardingPage";
 
 const App = () => {
   const { currentPage, params, navigate } = useRouter();
@@ -33,6 +34,10 @@ const App = () => {
       {currentPage === "login" && <LoginPage navigate={navigate} />}
 
       {currentPage === "signup" && <SignupPage navigate={navigate} />}
+
+      {currentPage === "onboarding" && (
+  <OnboardingPage navigate={navigate} />
+)}
 
       {/* Events Timeline */}
       {currentPage === "events" && (
