@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db } from "../firebase/firebase";
-import { signOut } from "firebase/auth";
+import { signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useFilters } from '../hooks/useFilters';
 import FiltersPanel from '../components/FiltersPanel';
@@ -10,14 +10,15 @@ const EventsTimelinePage = ({ navigate, events }) => {
   const { filters, setFilters, filteredEvents } = useFilters(events);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userName, setUserName] = useState(""); 
-  const user = auth.currentUser;
+  const [user, setUser] = useState(null);
 
   // Fetch User Profile Name from Firestore
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (user) {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
         try {
-          const docRef = doc(db, "users", user.uid);
+          const docRef = doc(db, "users", currentUser.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             setUserName(docSnap.data().name);
@@ -25,10 +26,12 @@ const EventsTimelinePage = ({ navigate, events }) => {
         } catch (error) {
           console.error("Error fetching profile:", error);
         }
+      } else {
+        setUserName("");
       }
-    };
-    fetchProfile();
-  }, [user]);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -71,6 +74,13 @@ const EventsTimelinePage = ({ navigate, events }) => {
                   <div 
                     className="fixed inset-0 z-10" 
                     onClick={() => setIsMenuOpen(false)}
+                    role="button"
+                    tabIndex="-1"
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        setIsMenuOpen(false);
+                      }
+                    }}
                   ></div>
                   
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-20 overflow-hidden">

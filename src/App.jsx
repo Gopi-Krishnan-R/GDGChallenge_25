@@ -36,8 +36,8 @@ const App = () => {
       {currentPage === "signup" && <SignupPage navigate={navigate} />}
 
       {currentPage === "onboarding" && (
-  <OnboardingPage navigate={navigate} />
-)}
+        <OnboardingPage navigate={navigate} />
+      )}
 
       {/* Events Timeline */}
       {currentPage === "events" && (
