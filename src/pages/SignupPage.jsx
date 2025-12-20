@@ -26,13 +26,12 @@ const SignupPage = ({ navigate }) => {
     }
 
     try {
-      const result = await createUserWithEmailAndPassword(
+      await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      const user = result.user;
       navigate("onboarding");
     } catch (error) {
       alert(error.message);
