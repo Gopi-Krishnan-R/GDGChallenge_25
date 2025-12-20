@@ -33,7 +33,7 @@ const SignupPage = ({ navigate }) => {
       );
 
       const user = result.user;
-      alert("Account created successfully. You can now log in.");
+     navigate("onboarding");
     } catch (error) {
       alert(error.message);
     }
