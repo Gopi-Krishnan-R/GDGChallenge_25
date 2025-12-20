@@ -93,14 +93,22 @@ const OnboardingPage = ({ navigate }) => {
             {/* 3. Branch */}
             <div>
               <label className={labelStyle}>Branch</label>
-              <input
+              <select
                 required
-                type="text"
-                placeholder="e.g. CSE"
                 className={inputStyle}
                 value={formData.branch}
                 onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-              />
+              >
+                <option value="">Select Branch</option>
+                <option value="CSE">Computer Science & Engineering</option>
+                <option value="ECE">Electronics & Communication</option>
+                <option value="EEE">Electrical & Electronics</option>
+                <option value="ME">Mechanical Engineering</option>
+                <option value="CE">Civil Engineering</option>
+                <option value="IT">Information Technology</option>
+                <option value="AI&DS">AI & Data Science</option>
+                <option value="CSE(CS)">CSE (Cyber Security)</option>
+              </select>
             </div>
           </div>
 
