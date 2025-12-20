@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { ref, set } from "firebase/database";
-import { auth, db_log } from "../firebase/firebase";
+import { auth } from "../firebase/firebase";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -34,14 +33,6 @@ const SignupPage = () => {
       );
 
       const user = result.user;
-
-      await set(ref(db_log, `users/${user.uid}`), {
-        email: user.email,
-        role: "user",
-        createdAt: Date.now(),
-        lastLogin: Date.now(),
-      });
-
       alert("Account created successfully. You can now log in.");
     } catch (error) {
       alert(error.message);
