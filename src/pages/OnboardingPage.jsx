@@ -11,6 +11,7 @@ const OnboardingPage = ({ navigate }) => {
     gradYear: "",
   });
   const [loading, setLoading] = useState(false);
+  const currentYear = new Date().getFullYear();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -133,7 +134,7 @@ const OnboardingPage = ({ navigate }) => {
                 required
                 type="number"
                 placeholder="2026"
-                min={new Date().getFullYear()}
+                min={currentYear}
                 max="2032"
                 className={inputStyle}
                 value={formData.gradYear}
@@ -154,7 +155,6 @@ const OnboardingPage = ({ navigate }) => {
                   // When 4 digits are entered, enforce the valid range
                   if (value.length === 4) {
                     const year = Number(value);
-                    const currentYear = new Date().getFullYear();
                     if (year < currentYear || year > 2032) {
                       return;
                     }
