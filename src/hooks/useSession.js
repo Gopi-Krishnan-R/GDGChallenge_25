@@ -8,6 +8,7 @@ export function useSession() {
   const [userName, setUserName] = useState("");
   const [profileExists, setProfileExists] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -16,6 +17,7 @@ export function useSession() {
       if (!currentUser) {
         setUserName("");
         setProfileExists(false);
+        setRole(null);
         setLoading(false);
         return;
       }
@@ -28,14 +30,17 @@ export function useSession() {
           const data = docSnap.data();
           setUserName(data.name || "");
           setProfileExists(true);
+          setRole(data.role === "admin" ? "admin" : "student");
         } else {
           setUserName("");
           setProfileExists(false);
+          setRole("student");
         }
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
         setUserName("");
         setProfileExists(false);
+        setRole("student");
       }
 
       setLoading(false);
@@ -49,6 +54,7 @@ export function useSession() {
     userName,
     profileExists,
     loading,
+    role,
   };
 }
 

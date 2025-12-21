@@ -1,9 +1,11 @@
 import { db } from "./firebase/firebase";
 console.log("Firestore connected:", db);
 
-import React, { useState, Suspense, lazy } from "react";
-import { EVENTS_DATA } from "./data/events";
+import React, { Suspense, lazy } from "react";
+import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "./hooks/useRouter";
+import { useEvents } from "./hooks/useEvents";
+import { useSession } from "./hooks/useSession";
 
 // Lazy load pages for code splitting
 const SignupPage = lazy(() => import("./pages/SignupPage"));
@@ -16,49 +18,86 @@ const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 
 const App = () => {
   const { currentPage, params, navigate } = useRouter();
-  const [events, setEvents] = useState(EVENTS_DATA);
+  const { user, role, loading: sessionLoading } = useSession();
 
-  const handlePublishEvent = (newEvent) => {
-    setEvents((prev) => [...prev, newEvent]);
+  const { events, loading: eventsLoading } = useEvents();
+
+  const handlePublishEvent = async (event) => {
+    try {
+      const eventRef = doc(collection(db, "events"), event.event_id);
+
+      await setDoc(eventRef, {
+        title: event.title_ai,
+        summary: event.summary_ai,
+        description: event.description_ai,
+        tags: event.department_tags ?? [],
+        event_type: event.event_type ?? "general",
+        start_time: event.start_time,
+        end_time: event.end_time,
+        venue: event.venue ?? "TBD",
+        priority: event.priority ?? "normal",
+
+        targetingRules: [],
+        explicitRecipients: [],
+
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      console.log("Event published:", event.event_id);
+    } catch (err) {
+      console.error("Failed to publish event:", err);
+      alert("Failed to publish event. Check console for details.");
+    }
   };
 
   const selectedEvent = params.eventId
     ? events.find((e) => e.event_id === params.eventId)
     : null;
 
+  if (!sessionLoading && currentPage === "admin" && !user) {
+    navigate("login");
+    return null;
+  }
+
+if (
+  !sessionLoading && user && role === "admin" && currentPage === "events") {
+  navigate("admin");
+  return null;
+}
+
+
   return (
     <div className="font-sans min-h-screen bg-gray-50">
-      <Suspense fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Loading...</p>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600 font-medium">Loading...</p>
+            </div>
           </div>
-        </div>
-      }>
-        {/* Landing Page */}
+        }
+      >
         {currentPage === "landing" && <LandingPage navigate={navigate} />}
-
-        {/* Login Page */}
         {currentPage === "login" && <LoginPage navigate={navigate} />}
-
         {currentPage === "signup" && <SignupPage navigate={navigate} />}
-
         {currentPage === "onboarding" && (
           <OnboardingPage navigate={navigate} />
         )}
 
-        {/* Events Timeline */}
         {currentPage === "events" && (
-          <EventsTimelinePage navigate={navigate} events={events} />
+          <EventsTimelinePage
+            navigate={navigate}
+            events={events}
+            loading={eventsLoading}
+          />
         )}
 
-        {/* Event Detail Page */}
         {currentPage === "event-detail" && (
           <EventDetailPage navigate={navigate} event={selectedEvent} />
         )}
 
-        {/* Admin Dashboard */}
         {currentPage === "admin" && (
           <AdminDashboard
             navigate={navigate}
@@ -71,3 +110,4 @@ const App = () => {
 };
 
 export default App;
+
