@@ -7,7 +7,7 @@ import { useRouter } from "./hooks/useRouter";
 import { useEvents } from "./hooks/useEvents";
 import { useSession } from "./hooks/useSession";
 
-// Lazy load pages for code splitting
+// Lazy load pages
 const SignupPage = lazy(() => import("./pages/SignupPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -19,7 +19,6 @@ const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 const App = () => {
   const { currentPage, params, navigate } = useRouter();
   const { user, role, loading: sessionLoading } = useSession();
-
   const { events, loading: eventsLoading } = useEvents();
 
   const handlePublishEvent = async (event) => {
@@ -36,18 +35,14 @@ const App = () => {
         end_time: event.end_time,
         venue: event.venue ?? "TBD",
         priority: event.priority ?? "normal",
-
         targetingRules: [],
         explicitRecipients: [],
-
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-
-      console.log("Event published:", event.event_id);
     } catch (err) {
       console.error("Failed to publish event:", err);
-      alert("Failed to publish event. Check console for details.");
+      alert("Failed to publish event.");
     }
   };
 
@@ -60,52 +55,56 @@ const App = () => {
     return null;
   }
 
-if (
-  !sessionLoading && user && role === "admin" && currentPage === "events") {
-  navigate("admin");
-  return null;
-}
+  if (!sessionLoading && user && role === "admin" && currentPage === "events") {
+    navigate("admin");
+    return null;
+  }
 
+  const page = (
+    <>
+      {currentPage === "landing" && <LandingPage navigate={navigate} />}
+      {currentPage === "login" && <LoginPage navigate={navigate} />}
+      {currentPage === "signup" && <SignupPage navigate={navigate} />}
+      {currentPage === "onboarding" && <OnboardingPage navigate={navigate} />}
+
+      {currentPage === "events" && (
+        <EventsTimelinePage
+          navigate={navigate}
+          events={events}
+          loading={eventsLoading}
+        />
+      )}
+
+      {currentPage === "event-detail" && (
+        <EventDetailPage navigate={navigate} event={selectedEvent} />
+      )}
+    </>
+  );
 
   return (
-    <div className="font-sans min-h-screen bg-gray-50">
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600 font-medium">Loading...</p>
-            </div>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium">Loading...</p>
           </div>
-        }
-      >
-        {currentPage === "landing" && <LandingPage navigate={navigate} />}
-        {currentPage === "login" && <LoginPage navigate={navigate} />}
-        {currentPage === "signup" && <SignupPage navigate={navigate} />}
-        {currentPage === "onboarding" && (
-          <OnboardingPage navigate={navigate} />
-        )}
-
-        {currentPage === "events" && (
-          <EventsTimelinePage
-            navigate={navigate}
-            events={events}
-            loading={eventsLoading}
-          />
-        )}
-
-        {currentPage === "event-detail" && (
-          <EventDetailPage navigate={navigate} event={selectedEvent} />
-        )}
-
-        {currentPage === "admin" && (
-          <AdminDashboard
-            navigate={navigate}
-            onPublishEvent={handlePublishEvent}
-          />
-        )}
-      </Suspense>
-    </div>
+        </div>
+      }
+    >
+      {/* 🔥 Admin owns its own layout */}
+      {currentPage === "admin" ? (
+        <AdminDashboard
+          navigate={navigate}
+          onPublishEvent={handlePublishEvent}
+        />
+      ) : (
+        /* 🌍 All other pages keep the global shell */
+        <div className="font-sans min-h-screen bg-gray-50">
+          {page}
+        </div>
+      )}
+    </Suspense>
   );
 };
 
