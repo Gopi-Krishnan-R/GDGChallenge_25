@@ -3,6 +3,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase/firebase";
 import { useSession } from "../hooks/useSession";
 import { useFilters } from "../hooks/useFilters";
+import { useStudentEvents } from "../hooks/useStudentEvents";
 import { 
   Plus, 
   ShieldCheck, 
@@ -14,9 +15,10 @@ import {
 import FiltersPanel from "../components/FiltersPanel";
 import EventCard from "../components/EventCard";
 
-const EventsTimelinePage = ({ navigate, events }) => {
-  // -------------------- SESSION & FILTERS --------------------
+const EventsTimelinePage = ({ navigate }) => {
+  // -------------------- SESSION & EVENTS --------------------
   const { user, userName, profileExists, loading } = useSession();
+  const { events, loading: eventsLoading } = useStudentEvents();
   const { filters, setFilters, filteredEvents } = useFilters(events);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -44,11 +46,13 @@ const EventsTimelinePage = ({ navigate, events }) => {
   );
 
   // -------------------- LOADING STATE --------------------
-  if (loading) {
+  if (loading || eventsLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white space-y-4">
         <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-gray-500 font-medium animate-pulse">Syncing Timeline...</p>
+        <p className="text-gray-500 font-medium animate-pulse">
+          Syncing Timeline...
+        </p>
       </div>
     );
   }
@@ -77,7 +81,6 @@ const EventsTimelinePage = ({ navigate, events }) => {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-6">
-            {/* ADMIN QUICK ACTION */}
             {isAdmin && (
               <button
                 onClick={() => navigate("admin")}
@@ -88,18 +91,24 @@ const EventsTimelinePage = ({ navigate, events }) => {
               </button>
             )}
 
-            {/* USER PROFILE DROPDOWN */}
             <div className="relative">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-900 border-2 border-white shadow-md text-white font-bold hover:ring-2 hover:ring-indigo-500 transition-all"
               >
-                {userName ? userName[0].toUpperCase() : user?.email ? user.email[0].toUpperCase() : "U"}
+                {userName
+                  ? userName[0].toUpperCase()
+                  : user?.email
+                  ? user.email[0].toUpperCase()
+                  : "U"}
               </button>
 
               {isMenuOpen && (
                 <>
-                  <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setIsMenuOpen(false)}
+                  />
                   <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-20 overflow-hidden animate-in fade-in zoom-in duration-150 origin-top-right">
                     <div className="px-5 py-4 border-b border-slate-50 bg-slate-50/50">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
@@ -108,7 +117,9 @@ const EventsTimelinePage = ({ navigate, events }) => {
                       <p className="text-sm font-bold text-slate-900 truncate">
                         {userName || "Campus User"}
                       </p>
-                      <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                      <p className="text-xs text-slate-500 truncate">
+                        {user?.email}
+                      </p>
                     </div>
 
                     <div className="p-2">
@@ -136,13 +147,13 @@ const EventsTimelinePage = ({ navigate, events }) => {
         </div>
       </div>
 
-      {/* MAIN CONTENT AREA */}
+      {/* MAIN CONTENT */}
       <div className="max-w-5xl mx-auto p-4 sm:p-8">
-        
-        {/* STATS & SEARCH INFO */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Upcoming</h2>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+              Upcoming
+            </h2>
             <p className="text-slate-500 font-medium">
               Discover workshops, festivals, and campus notices.
             </p>
@@ -150,13 +161,14 @@ const EventsTimelinePage = ({ navigate, events }) => {
           <div className="bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm inline-flex items-center gap-2">
             <Search size={14} className="text-slate-400" />
             <span className="text-xs font-bold text-slate-600">
-              Filtered: <span className="text-indigo-600">{sortedEvents.length}</span> / {events.length}
+              Filtered:{" "}
+              <span className="text-indigo-600">{sortedEvents.length}</span> /{" "}
+              {events.length}
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* FILTERS SIDEBAR (HIDDEN ON MOBILE, SHOWS AS PANEL IN DASHBOARD) */}
           <div className="lg:col-span-3">
             <div className="sticky top-24">
               <FiltersPanel
@@ -167,25 +179,28 @@ const EventsTimelinePage = ({ navigate, events }) => {
             </div>
           </div>
 
-          {/* EVENTS LIST */}
           <div className="lg:col-span-9">
             {sortedEvents.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-center px-6">
                 <div className="bg-slate-50 p-4 rounded-full mb-4">
-                   <Calendar size={40} className="text-slate-300" />
+                  <Calendar size={40} className="text-slate-300" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-800">No events found</h3>
+                <h3 className="text-lg font-bold text-slate-800">
+                  No events found
+                </h3>
                 <p className="text-slate-500 text-sm max-w-xs mx-auto">
-                  Try adjusting your filters or search terms to find what you're looking for.
+                  Try adjusting your filters or search terms.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {sortedEvents.map((event) => (
+                {sortedEvents.map(event => (
                   <EventCard
                     key={event.event_id}
                     event={event}
-                    onClick={() => navigate("event-detail", { eventId: event.event_id })}
+                    onClick={() =>
+                      navigate("event-detail", { eventId: event.event_id })
+                    }
                   />
                 ))}
               </div>
@@ -194,7 +209,6 @@ const EventsTimelinePage = ({ navigate, events }) => {
         </div>
       </div>
 
-      {/* MOBILE FLOATING ACTION BUTTON (ONLY FOR ADMIN) */}
       {isAdmin && (
         <button
           onClick={() => navigate("admin")}
@@ -208,3 +222,4 @@ const EventsTimelinePage = ({ navigate, events }) => {
 };
 
 export default EventsTimelinePage;
+

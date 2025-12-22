@@ -2,7 +2,7 @@ import { db } from "./firebase/firebase";
 console.log("Firestore connected:", db);
 
 import React, { Suspense, lazy } from "react";
-import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "./hooks/useRouter";
 import { useEvents } from "./hooks/useEvents";
 import { useSession } from "./hooks/useSession";
@@ -23,26 +23,22 @@ const App = () => {
 
   const handlePublishEvent = async (event) => {
     try {
-      const eventRef = doc(collection(db, "events"), event.event_id);
+      const eventsRef = collection(db, "events");
 
-      await setDoc(eventRef, {
-        title: event.title_ai,
-        summary: event.summary_ai,
-        description: event.description_ai,
-        tags: event.department_tags ?? [],
-        event_type: event.event_type ?? "general",
-        start_time: event.start_time,
-        end_time: event.end_time,
-        venue: event.venue ?? "TBD",
-        priority: event.priority ?? "normal",
-        targetingRules: [],
-        explicitRecipients: [],
+      await addDoc(eventsRef, {
+        title: event.title,
+        summary: event.summary,
+        description: event.description,
+        tags: event.tags ?? [],
+        venue: event.venue ?? "",
+        start_time: event.start_time ?? "",
+        end_time: event.end_time ?? "",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
     } catch (err) {
       console.error("Failed to publish event:", err);
-      alert("Failed to publish event.");
+      alert("Failed to publish event. Check console.");
     }
   };
 
