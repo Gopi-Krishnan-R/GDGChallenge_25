@@ -12,13 +12,13 @@ import {
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase/firebase";
 import { useSession } from "../hooks/useSession";
+import { useEvents } from "../hooks/useEvents";
 
 const AdminDashboard = ({ navigate, onPublishEvent }) => {
-  // -------------------- SESSION --------------------
   const { user, userName, loading } = useSession();
+  const { events, loading: eventsLoading } = useEvents();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // -------------------- STATE --------------------
   const [eventTitle, setEventTitle] = useState("");
   const [rawText, setRawText] = useState("");
   const [processedEvent, setProcessedEvent] = useState(null);
@@ -31,7 +31,6 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
   const [newTag, setNewTag] = useState("");
   const [error, setError] = useState("");
 
-  // -------------------- LOADING --------------------
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">
@@ -40,7 +39,6 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
     );
   }
 
-  // -------------------- HELPERS --------------------
   const resetForm = () => {
     setEventTitle("");
     setRawText("");
@@ -49,22 +47,16 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
   };
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate("landing");
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
+    await signOut(auth);
+    navigate("landing");
   };
 
-  // -------------------- AI MOCK --------------------
   const processWithAI = () => {
     if (!eventTitle.trim() || !rawText.trim()) {
       setError("Please enter both event title and event details.");
       return;
     }
 
-    setError("");
     setIsProcessing(true);
 
     setTimeout(() => {
@@ -90,45 +82,49 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
     onPublishEvent(processedEvent);
     setShowModal(false);
     resetForm();
-    alert("Event published successfully!");
   };
 
-  // -------------------- TAG HANDLERS --------------------
   const addTag = () => {
     if (!newTag.trim()) return;
-    setProcessedEvent(prev => ({
-      ...prev,
-      department_tags: [...prev.department_tags, newTag.trim()]
+    setProcessedEvent(p => ({
+      ...p,
+      department_tags: [...p.department_tags, newTag.trim()]
     }));
     setNewTag("");
   };
 
   const removeTag = index => {
-    setProcessedEvent(prev => ({
-      ...prev,
-      department_tags: prev.department_tags.filter((_, i) => i !== index)
+    setProcessedEvent(p => ({
+      ...p,
+      department_tags: p.department_tags.filter((_, i) => i !== index)
     }));
   };
 
   const submitFeedback = () => {
     if (!feedbackText.trim()) return;
-
-    setIsProcessing(true);
-    setTimeout(() => {
-      setProcessedEvent(prev => ({
-        ...prev,
-        summary_ai: feedbackText.trim()
-      }));
-      setFeedbackText("");
-      setShowFeedback(false);
-      setIsProcessing(false);
-    }, 1000);
+    setProcessedEvent(p => ({ ...p, summary_ai: feedbackText.trim() }));
+    setFeedbackText("");
+    setShowFeedback(false);
   };
 
-  // -------------------- UI --------------------
+  const openExistingEvent = event => {
+    setProcessedEvent({
+      event_id: event.event_id,
+      title_ai: event.title,
+      description_ai: event.description,
+      summary_ai: event.summary,
+      department_tags: event.tags || [],
+      event_type: event.event_type || "general",
+      venue: event.venue || "",
+      start_time: event.start_time,
+      end_time: event.end_time
+    });
+    setShowModal(true);
+    setShowFeedback(false);
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900">
-      {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r hidden md:flex flex-col">
         <div className="p-6 border-b flex items-center gap-2 text-xl font-bold text-indigo-600">
           <LayoutDashboard size={24} />
@@ -144,9 +140,7 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
         </nav>
       </aside>
 
-      {/* MAIN */}
       <main className="flex-1">
-        {/* HEADER */}
         <header className="h-16 bg-white border-b px-8 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <button
@@ -158,17 +152,12 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
             <h1 className="text-lg font-semibold">Admin Dashboard</h1>
           </div>
 
-          {/* PROFILE MENU */}
           <div className="relative">
             <button
-              onClick={() => setIsMenuOpen(p => !p)}
+              onClick={() => setIsMenuOpen(v => !v)}
               className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold"
             >
-              {userName
-                ? userName[0].toUpperCase()
-                : user?.email
-                ? user.email[0].toUpperCase()
-                : "A"}
+              {userName?.[0] || user?.email?.[0] || "A"}
             </button>
 
             {isMenuOpen && (
@@ -179,17 +168,9 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
                 />
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border z-20 overflow-hidden">
                   <div className="px-4 py-3 border-b">
-                    <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">
-                      ADMIN PROFILE
-                    </p>
                     <p className="font-bold truncate">
                       {userName || user?.email}
                     </p>
-                    {userName && (
-                      <p className="text-xs text-slate-500 truncate">
-                        {user?.email}
-                      </p>
-                    )}
                   </div>
                   <button
                     onClick={handleLogout}
@@ -203,34 +184,21 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
           </div>
         </header>
 
-        {/* FORM */}
-        <div className="max-w-4xl mx-auto p-8">
+        <div className="max-w-4xl mx-auto p-8 space-y-8">
           <div className="bg-white border rounded-xl p-6 space-y-6">
-            <div>
-              <label className="text-sm font-semibold">Event Title</label>
-              <input
-                value={eventTitle}
-                onChange={e => {
-                  setEventTitle(e.target.value);
-                  setError("");
-                }}
-                className="w-full mt-1 px-4 py-2 border rounded-lg"
-                placeholder="Enter event title"
-              />
-            </div>
+            <input
+              value={eventTitle}
+              onChange={e => setEventTitle(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg"
+              placeholder="Event title"
+            />
 
-            <div>
-              <label className="text-sm font-semibold">Event Details</label>
-              <textarea
-                value={rawText}
-                onChange={e => {
-                  setRawText(e.target.value);
-                  setError("");
-                }}
-                className="w-full mt-1 h-40 px-4 py-3 border rounded-lg resize-none"
-                placeholder="Paste full event description"
-              />
-            </div>
+            <textarea
+              value={rawText}
+              onChange={e => setRawText(e.target.value)}
+              className="w-full h-40 px-4 py-3 border rounded-lg resize-none"
+              placeholder="Event details"
+            />
 
             {error && (
               <div className="flex items-center gap-2 bg-red-50 text-red-600 p-3 rounded">
@@ -254,16 +222,34 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
               </button>
             </div>
           </div>
+
+          <div className="bg-white border rounded-xl p-6 space-y-4">
+            {eventsLoading ? (
+              <p className="text-sm text-slate-400">Loading events…</p>
+            ) : (
+              <div className="space-y-2">
+                {events.map(event => (
+                  <button
+                    key={event.event_id}
+                    onClick={() => openExistingEvent(event)}
+                    className="w-full text-left border rounded-lg p-3 bg-slate-50 hover:bg-slate-100"
+                  >
+                    <p className="font-semibold text-sm">{event.title}</p>
+                    <p className="text-xs text-slate-500">{event.summary}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
-      {/* MODAL */}
       {showModal && processedEvent && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl">
-            <div className="p-6 border-b flex justify-between items-center">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl">
+            <div className="p-6 border-b flex justify-between">
               <h3 className="font-bold text-lg">
-                {showFeedback ? "Refine Output" : "Preview Event"}
+                {showFeedback ? "Edit Summary" : "Preview Event"}
               </h3>
               <button onClick={() => setShowModal(false)}>
                 <X />
@@ -272,21 +258,53 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
 
             <div className="p-6 space-y-5">
               {showFeedback ? (
-                <textarea
-                  value={feedbackText}
-                  onChange={e => setFeedbackText(e.target.value)}
-                  className="w-full h-40 border rounded-lg p-3"
-                  placeholder="Describe what should be improved"
-                />
+                <>
+                  <textarea
+                    value={feedbackText}
+                    onChange={e => setFeedbackText(e.target.value)}
+                    className="w-full h-40 border rounded-lg p-3"
+                  />
+                  <button
+                    onClick={submitFeedback}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg"
+                  >
+                    Apply Changes
+                  </button>
+                </>
               ) : (
                 <>
-                  <h2 className="text-xl font-bold">
-                    {processedEvent.title_ai}
-                  </h2>
+                  <input
+                    className="w-full border rounded-lg p-2"
+                    value={processedEvent.title_ai}
+                    onChange={e =>
+                      setProcessedEvent(p => ({
+                        ...p,
+                        title_ai: e.target.value
+                      }))
+                    }
+                  />
 
-                  <p className="italic bg-indigo-50 p-3 rounded">
-                    {processedEvent.summary_ai}
-                  </p>
+                  <textarea
+                    className="w-full border rounded-lg p-2 h-32"
+                    value={processedEvent.description_ai}
+                    onChange={e =>
+                      setProcessedEvent(p => ({
+                        ...p,
+                        description_ai: e.target.value
+                      }))
+                    }
+                  />
+
+                  <input
+                    className="w-full border rounded-lg p-2"
+                    value={processedEvent.venue}
+                    onChange={e =>
+                      setProcessedEvent(p => ({
+                        ...p,
+                        venue: e.target.value
+                      }))
+                    }
+                  />
 
                   <div className="flex flex-wrap gap-2">
                     {processedEvent.department_tags.map((tag, i) => (
@@ -302,12 +320,11 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
                     ))}
                   </div>
 
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-2">
                     <input
                       value={newTag}
                       onChange={e => setNewTag(e.target.value)}
                       className="flex-1 border px-3 py-2 rounded-lg"
-                      placeholder="Add tag"
                     />
                     <button
                       onClick={addTag}
@@ -316,39 +333,24 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
                       Add
                     </button>
                   </div>
+
+                  <button
+                    onClick={() => setShowFeedback(true)}
+                    className="border px-4 py-2 rounded-lg"
+                  >
+                    Edit Summary
+                  </button>
                 </>
               )}
             </div>
 
-            <div className="p-6 bg-slate-50 border-t flex justify-between">
-              {showFeedback ? (
-                <>
-                  <button onClick={() => setShowFeedback(false)}>
-                    Back
-                  </button>
-                  <button
-                    onClick={submitFeedback}
-                    className="bg-indigo-600 text-white px-6 py-2 rounded-lg"
-                  >
-                    Update Preview
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setShowFeedback(true)}
-                    className="border px-6 py-2 rounded-lg"
-                  >
-                    No
-                  </button>
-                  <button
-                    onClick={publishEvent}
-                    className="bg-indigo-600 text-white px-6 py-2 rounded-lg flex items-center gap-2"
-                  >
-                    <Send size={16} /> Publish
-                  </button>
-                </>
-              )}
+            <div className="p-6 border-t flex justify-end">
+              <button
+                onClick={publishEvent}
+                className="bg-indigo-600 text-white px-6 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Send size={16} /> Save
+              </button>
             </div>
           </div>
         </div>
@@ -358,3 +360,4 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
 };
 
 export default AdminDashboard;
+
