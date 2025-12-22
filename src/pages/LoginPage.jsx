@@ -15,8 +15,7 @@ const LoginPage = ({ navigate }) => {
     }
 
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const user = result.user;
+      await signInWithEmailAndPassword(auth, email, password);
 
       navigate("events");
     } catch (error) {
