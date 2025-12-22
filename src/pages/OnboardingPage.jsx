@@ -29,6 +29,7 @@ const OnboardingPage = ({ navigate }) => {
       await setDoc(doc(db, "users", user.uid), {
         ...formData,
         email: user.email,
+        role: "student",
         onboardingComplete: true,
         joinedAt: new Date().toISOString(),
       });
