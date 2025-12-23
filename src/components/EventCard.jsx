@@ -1,4 +1,3 @@
-
 import { Calendar, MapPin, ChevronRight } from "lucide-react";
 
 /* ---------- STYLE MAPS ---------- */
@@ -8,13 +7,13 @@ const eventTypeStyles = {
   notice: "bg-amber-100 text-amber-700",
   academic: "bg-emerald-100 text-emerald-700",
   cultural: "bg-pink-100 text-pink-700",
-  sports: "bg-blue-100 text-blue-700"
+  sports: "bg-blue-100 text-blue-700",
 };
 
 const priorityStyles = {
   high: "bg-red-100 text-red-700 border-red-200",
   medium: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  normal: "bg-gray-100 text-gray-600 border-gray-200"
+  normal: "bg-gray-100 text-gray-600 border-gray-200",
 };
 
 /* ---------- HELPERS ---------- */
@@ -31,7 +30,7 @@ const formatDate = (value) => {
     return date.toLocaleDateString(undefined, {
       weekday: "short",
       month: "short",
-      day: "numeric"
+      day: "numeric",
     });
   } catch {
     return "TBA";
@@ -43,6 +42,7 @@ const formatDate = (value) => {
 const EventCard = ({ event, onClick }) => {
   const eventType = event.event_type || "general";
   const priority = event.priority || "normal";
+  const tags = event.tags ?? event.department_tags ?? [];
 
   return (
     <div
@@ -54,7 +54,8 @@ const EventCard = ({ event, onClick }) => {
           <div className="flex gap-2 mb-2">
             <span
               className={`text-xs px-2 py-1 rounded ${
-                eventTypeStyles[eventType] || eventTypeStyles.general
+                eventTypeStyles[eventType] ||
+                eventTypeStyles.general
               }`}
             >
               {eventType}
@@ -63,7 +64,8 @@ const EventCard = ({ event, onClick }) => {
             {priority !== "normal" && (
               <span
                 className={`text-xs px-2 py-1 rounded border ${
-                  priorityStyles[priority] || priorityStyles.normal
+                  priorityStyles[priority] ||
+                  priorityStyles.normal
                 }`}
               >
                 {priority.toUpperCase()}
@@ -72,7 +74,7 @@ const EventCard = ({ event, onClick }) => {
           </div>
 
           <h3 className="font-semibold text-gray-900">
-            {event.title || event.title_raw || "Untitled Event"}
+            {event.title || "Untitled Event"}
           </h3>
         </div>
 
@@ -80,7 +82,7 @@ const EventCard = ({ event, onClick }) => {
       </div>
 
       <p className="text-sm text-gray-700 mb-3">
-        {event.summary || event.summary_ai || "No summary available."}
+        {event.summary || "No summary available."}
       </p>
 
       <div className="flex gap-4 text-xs text-gray-600">
@@ -97,9 +99,9 @@ const EventCard = ({ event, onClick }) => {
         )}
       </div>
 
-      {event.department_tags?.length > 0 && (
+      {tags.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
-          {event.department_tags.map((tag) => (
+          {tags.map((tag) => (
             <span
               key={tag}
               className="text-xs bg-gray-100 px-2 py-1 rounded"

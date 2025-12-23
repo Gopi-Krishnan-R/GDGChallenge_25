@@ -1,59 +1,27 @@
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, query } from "firebase/firestore";
 import { db } from "../firebase/firebase";
+import { normalizeEvent } from "../utils/normalizeEvent";
 
 export function useEvents() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const q = query(
-      collection(db, "events"),
-      orderBy("start_time", "asc")
-    );
+    const q = query(collection(db, "events"));
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const nextEvents = snapshot.docs.map((doc) => {
-          const data = doc.data();
+        const normalizedEvents = snapshot.docs
+          .map((doc) => normalizeEvent(doc))
+          .filter(Boolean);
 
-          const tags = data.tags || data.department_tags || [];
-
-          return {
-            event_id: doc.id,
-
-            // text
-            title: data.title || data.title_raw || "Untitled Event",
-            summary: data.summary || data.summary_ai || "",
-            description: data.description || data.description_ai || "",
-
-            // classification
-            event_type: data.event_type || "general",
-            priority: data.priority || "normal",
-
-            // IMPORTANT: expose BOTH for backward compatibility
-            tags,
-            department_tags: tags,
-
-            // timing & place
-            start_time: data.start_time || null,
-            end_time: data.end_time || null,
-            venue: data.venue || "TBD",
-
-            // targeting (future use)
-            explicitRecipients: data.explicitRecipients || [],
-            createdAt: data.createdAt || null
-          };
-        });
-
-        setEvents(nextEvents);
+        setEvents(normalizedEvents);
         setLoading(false);
       },
-      (err) => {
-        console.error("Error listening to events:", err);
-        setError(err);
+      () => {
+        setEvents([]);
         setLoading(false);
       }
     );
@@ -61,6 +29,6 @@ export function useEvents() {
     return () => unsubscribe();
   }, []);
 
-  return { events, loading, error };
+  return { events, loading };
 }
 

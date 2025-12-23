@@ -4,13 +4,13 @@ import { auth } from "../firebase/firebase";
 import { useSession } from "../hooks/useSession";
 import { useFilters } from "../hooks/useFilters";
 import { useStudentEvents } from "../hooks/useStudentEvents";
-import { 
-  Plus, 
-  ShieldCheck, 
-  LogOut, 
-  LayoutDashboard, 
-  Calendar, 
-  Search 
+import {
+  Plus,
+  ShieldCheck,
+  LogOut,
+  LayoutDashboard,
+  Calendar,
+  Search,
 } from "lucide-react";
 import FiltersPanel from "../components/FiltersPanel";
 import EventCard from "../components/EventCard";
@@ -21,6 +21,17 @@ const EventsTimelinePage = ({ navigate }) => {
   const { events, loading: eventsLoading } = useStudentEvents();
   const { filters, setFilters, filteredEvents } = useFilters(events);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // -------------------- 🔍 DEBUG LOGS --------------------
+  useEffect(() => {
+    console.log("🧪 [Timeline Debug]");
+    console.log("Raw events:", events);
+    console.log("Events count:", events.length);
+    console.log("Filtered events:", filteredEvents);
+    console.log("Filtered count:", filteredEvents.length);
+    console.log("Current filters:", filters);
+  }, [events, filteredEvents, filters]);
+  // --------------------------------------------------------
 
   // -------------------- ADMIN LOGIC --------------------
   const isAdmin = user?.email === "1@cet.ac.in";
@@ -109,7 +120,7 @@ const EventsTimelinePage = ({ navigate }) => {
                     className="fixed inset-0 z-10"
                     onClick={() => setIsMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-20 overflow-hidden animate-in fade-in zoom-in duration-150 origin-top-right">
+                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-20 overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-50 bg-slate-50/50">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
                         {isAdmin ? "Admin Profile" : "Student Profile"}
@@ -131,7 +142,7 @@ const EventsTimelinePage = ({ navigate }) => {
                           <LayoutDashboard size={16} /> Admin Dashboard
                         </button>
                       )}
-                      
+
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 font-bold hover:bg-red-50 rounded-lg transition-colors"
@@ -162,8 +173,10 @@ const EventsTimelinePage = ({ navigate }) => {
             <Search size={14} className="text-slate-400" />
             <span className="text-xs font-bold text-slate-600">
               Filtered:{" "}
-              <span className="text-indigo-600">{sortedEvents.length}</span> /{" "}
-              {events.length}
+              <span className="text-indigo-600">
+                {sortedEvents.length}
+              </span>{" "}
+              / {events.length}
             </span>
           </div>
         </div>
@@ -183,7 +196,10 @@ const EventsTimelinePage = ({ navigate }) => {
             {sortedEvents.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-center px-6">
                 <div className="bg-slate-50 p-4 rounded-full mb-4">
-                  <Calendar size={40} className="text-slate-300" />
+                  <Calendar
+                    size={40}
+                    className="text-slate-300"
+                  />
                 </div>
                 <h3 className="text-lg font-bold text-slate-800">
                   No events found
@@ -194,12 +210,14 @@ const EventsTimelinePage = ({ navigate }) => {
               </div>
             ) : (
               <div className="space-y-4">
-                {sortedEvents.map(event => (
+                {sortedEvents.map((event) => (
                   <EventCard
                     key={event.event_id}
                     event={event}
                     onClick={() =>
-                      navigate("event-detail", { eventId: event.event_id })
+                      navigate("event-detail", {
+                        eventId: event.event_id,
+                      })
                     }
                   />
                 ))}
@@ -222,4 +240,3 @@ const EventsTimelinePage = ({ navigate }) => {
 };
 
 export default EventsTimelinePage;
-

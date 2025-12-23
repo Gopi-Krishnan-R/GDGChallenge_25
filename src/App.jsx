@@ -1,10 +1,7 @@
-import { db } from "./firebase/firebase";
-console.log("Firestore connected:", db);
-
 import React, { Suspense, lazy } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "./firebase/firebase";
 import { useRouter } from "./hooks/useRouter";
-import { useEvents } from "./hooks/useEvents";
 import { useSession } from "./hooks/useSession";
 
 // Lazy load pages
@@ -19,20 +16,25 @@ const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 const App = () => {
   const { currentPage, params, navigate } = useRouter();
   const { user, role, loading: sessionLoading } = useSession();
-  const { events, loading: eventsLoading } = useEvents();
 
   const handlePublishEvent = async (event) => {
     try {
-      const eventsRef = collection(db, "events");
-
-      await addDoc(eventsRef, {
+      await addDoc(collection(db, "events"), {
         title: event.title,
         summary: event.summary,
         description: event.description,
+
+        // UI / filtering
         tags: event.tags ?? [],
+
+        // 🔐 SECURITY / TARGETING (NEW, OPTIONAL)
+        // [] or missing => global event
+        target_departments: event.target_departments ?? [],
+
         venue: event.venue ?? "",
         start_time: event.start_time ?? "",
         end_time: event.end_time ?? "",
+
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -42,10 +44,7 @@ const App = () => {
     }
   };
 
-  const selectedEvent = params.eventId
-    ? events.find((e) => e.event_id === params.eventId)
-    : null;
-
+  // 🔒 Guards (unchanged)
   if (!sessionLoading && currentPage === "admin" && !user) {
     navigate("login");
     return null;
@@ -64,15 +63,11 @@ const App = () => {
       {currentPage === "onboarding" && <OnboardingPage navigate={navigate} />}
 
       {currentPage === "events" && (
-        <EventsTimelinePage
-          navigate={navigate}
-          events={events}
-          loading={eventsLoading}
-        />
+        <EventsTimelinePage navigate={navigate} />
       )}
 
       {currentPage === "event-detail" && (
-        <EventDetailPage navigate={navigate} event={selectedEvent} />
+        <EventDetailPage navigate={navigate} params={params} />
       )}
     </>
   );
@@ -88,14 +83,12 @@ const App = () => {
         </div>
       }
     >
-      {/* 🔥 Admin owns its own layout */}
       {currentPage === "admin" ? (
         <AdminDashboard
           navigate={navigate}
           onPublishEvent={handlePublishEvent}
         />
       ) : (
-        /* 🌍 All other pages keep the global shell */
         <div className="font-sans min-h-screen bg-gray-50">
           {page}
         </div>
