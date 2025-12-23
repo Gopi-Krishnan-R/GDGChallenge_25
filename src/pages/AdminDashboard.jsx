@@ -8,12 +8,13 @@ import {
   AlertCircle,
   Loader2,
   ChevronLeft,
-  LogOut
+  LogOut,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase/firebase";
 import { useSession } from "../hooks/useSession";
 import { useEvents } from "../hooks/useEvents";
+import { processEventWithAI } from "../services/gemini";
 
 const inputGlass =
   "w-full rounded-xl bg-white/70 backdrop-blur px-4 py-3 text-slate-900 placeholder-slate-400 shadow-inner shadow-black/5 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 transition";
@@ -33,7 +34,6 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [processedEvent, setProcessedEvent] = useState(null);
-  const [newTag, setNewTag] = useState("");
 
   if (loading) {
     return (
@@ -54,50 +54,57 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
     navigate("landing");
   };
 
-  const processWithAI = () => {
+  /* ---------- GEMINI AI PIPELINE ---------- */
+
+  const processWithAI = async () => {
     if (!eventTitle.trim() || !rawText.trim()) {
       setError("Please enter both event title and details.");
       return;
     }
 
     setIsProcessing(true);
+    setError("");
 
-    setTimeout(() => {
-      setProcessedEvent({
-        event_id: `evt_${Date.now()}`,
-        title_ai: eventTitle,
-        description_ai: rawText,
-        summary_ai: rawText.split(".").slice(0, 2).join(".") + ".",
-        department_tags: ["College Event"],
-        venue: "",
-        start_time: "",
-        end_time: ""
+    try {
+      const aiResult = await processEventWithAI({
+        title: eventTitle,
+        rawText,
       });
 
-      setIsProcessing(false);
+      const newEvent = {
+        event_id: `evt_${Date.now()}`,
+        title_ai: aiResult.title_ai,
+        summary_ai: aiResult.summary_ai,
+        description_ai: aiResult.description_ai,
+        department_tags: aiResult.department_tags ?? [],
+        event_type: aiResult.event_type,
+        priority: aiResult.priority,
+        venue: aiResult.venue,
+        start_time: aiResult.start_time,
+        end_time: aiResult.end_time,
+      };
+
+      setProcessedEvent(newEvent);
       setShowCreateModal(false);
-      setShowPreviewModal(true);
-    }, 600);
+      setShowPreviewModal(true); // ✅ FIXED
+    } catch (err) {
+      setError(`Failed to process event: ${err.message}`);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const saveEvent = () => {
     if (!processedEvent) return;
 
-    const summary =
-      processedEvent.summary_ai ||
-      processedEvent.description_ai
-        .split(".")
-        .slice(0, 2)
-        .join(".") + ".";
-
     onPublishEvent({
       title: processedEvent.title_ai,
-      summary,
+      summary: processedEvent.summary_ai,
       description: processedEvent.description_ai,
-      tags: processedEvent.department_tags || [],
+      tags: processedEvent.department_tags,
       venue: processedEvent.venue,
       start_time: processedEvent.start_time,
-      end_time: processedEvent.end_time
+      end_time: processedEvent.end_time,
     });
 
     setShowPreviewModal(false);
@@ -105,7 +112,7 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
     resetCreateForm();
   };
 
-  const openExistingEvent = event => {
+  const openExistingEvent = (event) => {
     setProcessedEvent({
       event_id: event.event_id,
       title_ai: event.title,
@@ -114,26 +121,12 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
       department_tags: event.tags || [],
       venue: event.venue || "",
       start_time: event.start_time || "",
-      end_time: event.end_time || ""
+      end_time: event.end_time || "",
     });
     setShowPreviewModal(true);
   };
 
-  const addTag = () => {
-    if (!newTag.trim() || !processedEvent) return;
-    setProcessedEvent(p => ({
-      ...p,
-      department_tags: [...(p.department_tags || []), newTag.trim()]
-    }));
-    setNewTag("");
-  };
-
-  const removeTag = i => {
-    setProcessedEvent(p => ({
-      ...p,
-      department_tags: p.department_tags.filter((_, idx) => idx !== i)
-    }));
-  };
+  /* ---------- UI ---------- */
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 flex">
@@ -208,7 +201,7 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
             {eventsLoading ? (
               <p className="text-sm text-slate-400">Loading events…</p>
             ) : (
-              events.map(event => (
+              events.map((event) => (
                 <button
                   key={event.event_id}
                   onClick={() => openExistingEvent(event)}
@@ -223,6 +216,7 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
         </div>
       </main>
 
+      {/* CREATE MODAL */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
@@ -241,14 +235,14 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
               className={inputGlass}
               placeholder="Event title"
               value={eventTitle}
-              onChange={e => setEventTitle(e.target.value)}
+              onChange={(e) => setEventTitle(e.target.value)}
             />
 
             <textarea
               className={`${inputGlass} h-40 resize-none`}
               placeholder="Event details"
               value={rawText}
-              onChange={e => setRawText(e.target.value)}
+              onChange={(e) => setRawText(e.target.value)}
             />
 
             {error && (
@@ -264,7 +258,11 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
                 disabled={isProcessing}
                 className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-60"
               >
-                {isProcessing ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                {isProcessing ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Sparkles />
+                )}
                 Generate Preview
               </button>
             </div>
@@ -272,6 +270,7 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
         </div>
       )}
 
+      {/* PREVIEW MODAL */}
       {showPreviewModal && processedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
@@ -286,62 +285,13 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
               </button>
             </div>
 
-            <input
-              className={inputGlass}
-              value={processedEvent.title_ai}
-              onChange={e =>
-                setProcessedEvent(p => ({ ...p, title_ai: e.target.value }))
-              }
-            />
+            <input className={inputGlass} value={processedEvent.title_ai} readOnly />
 
             <textarea
               className={`${inputGlass} h-32`}
               value={processedEvent.description_ai}
-              onChange={e =>
-                setProcessedEvent(p => ({
-                  ...p,
-                  description_ai: e.target.value
-                }))
-              }
+              readOnly
             />
-
-            <input
-              className={inputGlass}
-              placeholder="Venue / Location"
-              value={processedEvent.venue}
-              onChange={e =>
-                setProcessedEvent(p => ({ ...p, venue: e.target.value }))
-              }
-            />
-
-            <div className="flex flex-wrap gap-2">
-              {processedEvent.department_tags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="bg-indigo-100 px-3 py-1 rounded-full flex gap-2 text-sm"
-                >
-                  {tag}
-                  <button onClick={() => removeTag(i)}>
-                    <X size={14} />
-                  </button>
-                </span>
-              ))}
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                className={inputGlass}
-                value={newTag}
-                onChange={e => setNewTag(e.target.value)}
-                placeholder="Add tag"
-              />
-              <button
-                onClick={addTag}
-                className="bg-slate-200 px-4 rounded-xl"
-              >
-                Add
-              </button>
-            </div>
 
             <div className="flex justify-end">
               <button
@@ -359,4 +309,3 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
 };
 
 export default AdminDashboard;
-

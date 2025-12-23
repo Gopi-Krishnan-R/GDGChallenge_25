@@ -1,14 +1,21 @@
-import React from 'react';
-import { useFilters } from '../hooks/useFilters';
-import FiltersPanel from '../components/FiltersPanel';
-import EventCard from '../components/EventCard';
+import React from "react";
+import { useFilters } from "../hooks/useFilters";
+import FiltersPanel from "../components/FiltersPanel";
+import EventCard from "../components/EventCard";
 
 const EventsTimelinePage = ({ navigate, events }) => {
   const { filters, setFilters, filteredEvents } = useFilters(events);
 
-  const sortedEvents = [...filteredEvents].sort(
-    (a, b) => new Date(a.start_time) - new Date(b.start_time)
-  );
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
+    const aTime = a.start_time ? new Date(a.start_time).getTime() : null;
+    const bTime = b.start_time ? new Date(b.start_time).getTime() : null;
+
+    if (aTime === null && bTime === null) return 0;
+    if (aTime === null) return 1;   // TBD goes last
+    if (bTime === null) return -1;
+
+    return aTime - bTime;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -20,7 +27,7 @@ const EventsTimelinePage = ({ navigate, events }) => {
           </h1>
 
           <button
-            onClick={() => navigate('landing')}
+            onClick={() => navigate("landing")}
             className="text-sm text-gray-600 hover:text-gray-900"
           >
             ← Back to Home
@@ -45,12 +52,12 @@ const EventsTimelinePage = ({ navigate, events }) => {
             No events match your filters
           </div>
         ) : (
-          sortedEvents.map(event => (
+          sortedEvents.map((event) => (
             <EventCard
               key={event.event_id}
               event={event}
               onClick={() =>
-                navigate('event-detail', { eventId: event.event_id })
+                navigate("event-detail", { eventId: event.event_id })
               }
             />
           ))

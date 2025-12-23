@@ -1,40 +1,37 @@
-import { Calendar, MapPin, ChevronRight } from "lucide-react";
+import { ChevronRight, Calendar, MapPin } from "lucide-react";
 
 /* ---------- STYLE MAPS ---------- */
 
-const eventTypeStyles = {
-  general: "bg-indigo-100 text-indigo-700",
-  notice: "bg-amber-100 text-amber-700",
-  academic: "bg-emerald-100 text-emerald-700",
-  cultural: "bg-pink-100 text-pink-700",
-  sports: "bg-blue-100 text-blue-700",
+const priorityStyles = {
+  critical: "bg-red-50 border-red-300 text-red-800",
+  important: "bg-orange-50 border-orange-300 text-orange-800",
+  normal: "bg-blue-50 border-blue-300 text-blue-800",
 };
 
-const priorityStyles = {
-  high: "bg-red-100 text-red-700 border-red-200",
-  medium: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  normal: "bg-gray-100 text-gray-600 border-gray-200",
+const eventTypeStyles = {
+  hackathon: "bg-indigo-100 text-indigo-800",
+  workshop: "bg-green-100 text-green-800",
+  seminar: "bg-purple-100 text-purple-800",
+  cultural: "bg-pink-100 text-pink-800",
+  sports: "bg-yellow-100 text-yellow-800",
+  academic: "bg-blue-100 text-blue-800",
+  general: "bg-gray-100 text-gray-800",
 };
 
 /* ---------- HELPERS ---------- */
 
 const formatDate = (value) => {
-  if (!value) return "TBA";
+  if (!value || value === "TBD") return "TBD";
 
-  try {
-    const date =
-      typeof value === "string"
-        ? new Date(value)
-        : value.toDate?.() ?? new Date(value);
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return value;
 
-    return date.toLocaleDateString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  } catch {
-    return "TBA";
-  }
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 /* ---------- COMPONENT ---------- */
@@ -42,7 +39,9 @@ const formatDate = (value) => {
 const EventCard = ({ event, onClick }) => {
   const eventType = event.event_type || "general";
   const priority = event.priority || "normal";
-  const tags = event.tags ?? event.department_tags ?? [];
+  const tags = Array.isArray(event.department_tags)
+    ? event.department_tags
+    : [];
 
   return (
     <div
@@ -54,8 +53,7 @@ const EventCard = ({ event, onClick }) => {
           <div className="flex gap-2 mb-2">
             <span
               className={`text-xs px-2 py-1 rounded ${
-                eventTypeStyles[eventType] ||
-                eventTypeStyles.general
+                eventTypeStyles[eventType] || eventTypeStyles.general
               }`}
             >
               {eventType}
@@ -64,8 +62,7 @@ const EventCard = ({ event, onClick }) => {
             {priority !== "normal" && (
               <span
                 className={`text-xs px-2 py-1 rounded border ${
-                  priorityStyles[priority] ||
-                  priorityStyles.normal
+                  priorityStyles[priority]
                 }`}
               >
                 {priority.toUpperCase()}
@@ -74,16 +71,18 @@ const EventCard = ({ event, onClick }) => {
           </div>
 
           <h3 className="font-semibold text-gray-900">
-            {event.title || "Untitled Event"}
+            {event.title_ai || event.title_raw || "Untitled Event"}
           </h3>
         </div>
 
         <ChevronRight size={20} className="text-gray-400" />
       </div>
 
-      <p className="text-sm text-gray-700 mb-3">
-        {event.summary || "No summary available."}
-      </p>
+      {event.summary_ai && (
+        <p className="text-sm text-gray-700 mb-3">
+          {event.summary_ai}
+        </p>
+      )}
 
       <div className="flex gap-4 text-xs text-gray-600">
         <span className="flex items-center gap-1">
@@ -91,12 +90,10 @@ const EventCard = ({ event, onClick }) => {
           {formatDate(event.start_time)}
         </span>
 
-        {event.venue && (
-          <span className="flex items-center gap-1">
-            <MapPin size={14} />
-            {event.venue}
-          </span>
-        )}
+        <span className="flex items-center gap-1">
+          <MapPin size={14} />
+          {event.venue || "TBD"}
+        </span>
       </div>
 
       {tags.length > 0 && (
@@ -116,4 +113,3 @@ const EventCard = ({ event, onClick }) => {
 };
 
 export default EventCard;
-

@@ -1,6 +1,8 @@
-import React, { Suspense, lazy } from "react";
+import React, { useState, Suspense, lazy } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase/firebase";
+console.log("Firestore connected:", db);
+import { EVENTS_DATA } from "./data/events";
 import { useRouter } from "./hooks/useRouter";
 import { useSession } from "./hooks/useSession";
 
