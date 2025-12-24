@@ -20,9 +20,10 @@ export function normalizeEvent(doc) {
     // content
     title:
       data.title ??
+      data.summary ??
       data.title_raw ??
       data.title_ai ??
-      "",
+      "Untitled Event",
 
     summary:
       data.summary ??

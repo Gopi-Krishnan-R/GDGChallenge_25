@@ -21,10 +21,10 @@ const eventTypeStyles = {
 /* ---------- HELPERS ---------- */
 
 const formatDate = (value) => {
-  if (!value || value === "TBD") return "TBD";
+  if (!value) return "TBD";
 
   const date = new Date(value);
-  if (isNaN(date.getTime())) return value;
+  if (isNaN(date.getTime())) return "TBD";
 
   return date.toLocaleDateString("en-US", {
     month: "short",
@@ -39,9 +39,7 @@ const formatDate = (value) => {
 const EventCard = ({ event, onClick }) => {
   const eventType = event.event_type || "general";
   const priority = event.priority || "normal";
-  const tags = Array.isArray(event.department_tags)
-    ? event.department_tags
-    : [];
+  const tags = Array.isArray(event.tags) ? event.tags : [];
 
   return (
     <div
@@ -70,17 +68,19 @@ const EventCard = ({ event, onClick }) => {
             )}
           </div>
 
+          {/* ✅ NORMALIZED TITLE */}
           <h3 className="font-semibold text-gray-900">
-            {event.title_ai || event.title_raw || "Untitled Event"}
+            {event.title}
           </h3>
         </div>
 
         <ChevronRight size={20} className="text-gray-400" />
       </div>
 
-      {event.summary_ai && (
+      {/* ✅ NORMALIZED SUMMARY */}
+      {event.summary && (
         <p className="text-sm text-gray-700 mb-3">
-          {event.summary_ai}
+          {event.summary}
         </p>
       )}
 
@@ -96,11 +96,12 @@ const EventCard = ({ event, onClick }) => {
         </span>
       </div>
 
+      {/* ✅ NORMALIZED TAGS */}
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
-          {tags.map((tag) => (
+          {tags.map((tag, idx) => (
             <span
-              key={tag}
+              key={`${tag}-${idx}`}
               className="text-xs bg-gray-100 px-2 py-1 rounded"
             >
               {tag}
@@ -113,3 +114,4 @@ const EventCard = ({ event, onClick }) => {
 };
 
 export default EventCard;
+
