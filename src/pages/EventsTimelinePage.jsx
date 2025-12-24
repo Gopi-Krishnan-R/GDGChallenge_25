@@ -45,7 +45,6 @@ const EventsTimelinePage = ({ navigate }) => {
    * SAFE SORT
    * - Events WITH valid start_time first
    * - Events WITHOUT start_time last
-   * - Never construct Date("TBD")
    */
   const sortedEvents = [...filteredEvents].sort((a, b) => {
     const aTime = a.start_time ? new Date(a.start_time).getTime() : null;
@@ -101,11 +100,11 @@ const EventsTimelinePage = ({ navigate }) => {
               </button>
             )}
 
-            {/* Profile Menu */}
+            {/* 🔒 RESTORED GLASS PROFILE MENU (APPROVED VERSION) */}
             <div className="relative">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="w-10 h-10 rounded-full bg-slate-900 text-white font-bold border-2 border-white shadow-md hover:ring-2 hover:ring-indigo-500 transition"
+                className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold shadow-md hover:ring-2 hover:ring-indigo-400 transition"
               >
                 {(userName || user?.email || "U")[0].toUpperCase()}
               </button>
@@ -116,31 +115,30 @@ const EventsTimelinePage = ({ navigate }) => {
                     className="fixed inset-0 z-10"
                     onClick={() => setIsMenuOpen(false)}
                   />
-                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border z-20 overflow-hidden">
-                    <div className="px-5 py-4 border-b bg-slate-50">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <div className="absolute right-0 mt-3 w-64 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/40 z-20 overflow-hidden">
+                    <div className="px-5 py-4 border-b border-white/30 bg-white/60">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
                         {isAdmin ? "Admin Profile" : "Student Profile"}
                       </p>
-                      <p className="text-sm font-bold truncate">
+                      <p className="text-sm font-semibold truncate">
                         {userName || "Campus User"}
                       </p>
                       <p className="text-xs text-slate-500 truncate">
                         {user?.email}
                       </p>
                     </div>
-
                     <div className="p-2">
                       {isAdmin && (
                         <button
                           onClick={() => navigate("admin")}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-indigo-600 font-bold hover:bg-indigo-50 rounded-lg"
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-indigo-600 font-semibold hover:bg-indigo-50 rounded-lg transition"
                         >
                           <LayoutDashboard size={16} /> Admin Dashboard
                         </button>
                       )}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 font-bold hover:bg-red-50 rounded-lg"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 font-semibold hover:bg-red-50 rounded-lg transition"
                       >
                         <LogOut size={16} /> Log Out
                       </button>
@@ -228,3 +226,4 @@ const EventsTimelinePage = ({ navigate }) => {
 };
 
 export default EventsTimelinePage;
+
