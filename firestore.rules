@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* =========================
+       EVENTS — TARGETED DELIVERY
+       ========================= */
+    match /events/{eventId} {
+
+      // READ RULE:
+      // - user must be authenticated
+      // - event is GLOBAL (no target_departments or empty)
+      // - OR event explicitly targets user's branch
+      allow read: if request.auth != null
+        && (
+          !('target_departments' in resource.data)
+          || resource.data.target_departments.size() == 0
+          || resource.data.target_departments.hasAny([
+            get(/databases/$(database)/documents/users/$(request.auth.uid))
+              .data.branch
+          ])
+        );
+
+      // WRITE RULE:
+      // - only admins may create/update/delete events
+      allow write: if request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid))
+          .data.role == 'admin';
+    }
+
+    /* =========================
+       USERS
+       ========================= */
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == userId;
+    }
+  }
+}
+

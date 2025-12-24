@@ -1,11 +1,17 @@
-import { Filter } from 'lucide-react';
+import { Filter } from "lucide-react";
 
 const FiltersPanel = ({ filters, setFilters, events }) => {
   const departments = [
-    ...new Set(events.flatMap((e) => e.department_tags)),
+    ...new Set(
+      events.flatMap((e) => e.tags ?? e.department_tags ?? [])
+    ),
   ];
-  const eventTypes = [...new Set(events.map((e) => e.event_type))];
-  const priorities = ['normal', 'important', 'critical'];
+
+  const eventTypes = [
+    ...new Set(events.map((e) => e.event_type)),
+  ];
+
+  const priorities = ["normal", "important", "critical"];
 
   const toggle = (key, value) => {
     setFilters((prev) => ({
@@ -50,21 +56,21 @@ const FiltersPanel = ({ filters, setFilters, events }) => {
         title="Department"
         items={departments}
         active={filters.departments}
-        onToggle={(v) => toggle('departments', v)}
+        onToggle={(v) => toggle("departments", v)}
       />
 
       <FilterGroup
         title="Event Type"
         items={eventTypes}
         active={filters.eventTypes}
-        onToggle={(v) => toggle('eventTypes', v)}
+        onToggle={(v) => toggle("eventTypes", v)}
       />
 
       <FilterGroup
         title="Priority"
         items={priorities}
         active={filters.priorities}
-        onToggle={(v) => toggle('priorities', v)}
+        onToggle={(v) => toggle("priorities", v)}
         capitalize
       />
     </div>
@@ -87,8 +93,8 @@ const FilterGroup = ({
           onClick={() => onToggle(item)}
           className={`text-xs px-3 py-1.5 rounded border ${
             active.includes(item)
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-white border-gray-300'
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-white border-gray-300"
           }`}
         >
           {capitalize ? item : item}
@@ -99,3 +105,4 @@ const FilterGroup = ({
 );
 
 export default FiltersPanel;
+

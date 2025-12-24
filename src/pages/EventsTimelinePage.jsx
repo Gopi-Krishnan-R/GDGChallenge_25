@@ -3,13 +3,27 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase/firebase";
 import { useSession } from "../hooks/useSession";
 import { useFilters } from "../hooks/useFilters";
+import { useStudentEvents } from "../hooks/useStudentEvents";
+import {
+  Plus,
+  ShieldCheck,
+  LogOut,
+  LayoutDashboard,
+  Calendar,
+  Search,
+} from "lucide-react";
 import FiltersPanel from "../components/FiltersPanel";
 import EventCard from "../components/EventCard";
 
-const EventsTimelinePage = ({ navigate, events }) => {
+const EventsTimelinePage = ({ navigate }) => {
+  // -------------------- SESSION & EVENTS --------------------
   const { user, userName, profileExists, loading } = useSession();
+  const { events, loading: eventsLoading } = useStudentEvents();
   const { filters, setFilters, filteredEvents } = useFilters(events);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // -------------------- ADMIN LOGIC --------------------
+  const isAdmin = user?.email === "1@cet.ac.in";
 
   useEffect(() => {
     if (!loading && user && !profileExists) {
@@ -17,6 +31,7 @@ const EventsTimelinePage = ({ navigate, events }) => {
     }
   }, [user, profileExists, loading, navigate]);
 
+  // -------------------- HANDLERS --------------------
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -26,106 +41,186 @@ const EventsTimelinePage = ({ navigate, events }) => {
     }
   };
 
-  const sortedEvents = [...filteredEvents].sort(
-    (a, b) => new Date(a.start_time) - new Date(b.start_time)
-  );
+  /**
+   * SAFE SORT
+   * - Events WITH valid start_time first
+   * - Events WITHOUT start_time last
+   */
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
+    const aTime = a.start_time ? new Date(a.start_time).getTime() : null;
+    const bTime = b.start_time ? new Date(b.start_time).getTime() : null;
 
-  if (loading) {
+    if (aTime === null && bTime === null) return 0;
+    if (aTime === null) return 1;
+    if (bTime === null) return -1;
+
+    return aTime - bTime;
+  });
+
+  // -------------------- LOADING STATE --------------------
+  if (loading || eventsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Loading session...
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white space-y-4">
+        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-500 font-medium animate-pulse">
+          Syncing Timeline...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* HEADER */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Events Timeline
-          </h1>
+    <div className="min-h-screen bg-slate-50 font-sans">
+      {/* ==================== HEADER ==================== */}
+      <div className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-600 p-2 rounded-lg text-white">
+              <Calendar size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+                Events Timeline
+              </h1>
+              {isAdmin && (
+                <span className="mt-1 inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+                  <ShieldCheck size={10} /> Administrator Mode
+                </span>
+              )}
+            </div>
+          </div>
 
-          {/* USER MENU */}
-          <div className="relative">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all"
-            >
-              {userName
-                ? userName[0].toUpperCase()
-                : user?.email
-                ? user.email[0].toUpperCase()
-                : "U"}
-            </button>
+          <div className="flex items-center gap-6">
+            {isAdmin && (
+              <button
+                onClick={() => navigate("admin")}
+                className="hidden md:flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-lg transition active:scale-95"
+              >
+                <Plus size={18} /> New Event
+              </button>
+            )}
 
-            {isMenuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setIsMenuOpen(false)}
-                />
+            {/* 🔒 RESTORED GLASS PROFILE MENU (APPROVED VERSION) */}
+            <div className="relative">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold shadow-md hover:ring-2 hover:ring-indigo-400 transition"
+              >
+                {(userName || user?.email || "U")[0].toUpperCase()}
+              </button>
 
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-20 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-gray-50">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      {userName ? "Student Profile" : "Signed in as"}
-                    </p>
-                    <p className="text-sm font-bold text-slate-900 truncate">
-                      {userName || user?.email}
-                    </p>
-                    {userName && (
+              {isMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setIsMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-3 w-64 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/40 z-20 overflow-hidden">
+                    <div className="px-5 py-4 border-b border-white/30 bg-white/60">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+                        {isAdmin ? "Admin Profile" : "Student Profile"}
+                      </p>
+                      <p className="text-sm font-semibold truncate">
+                        {userName || "Campus User"}
+                      </p>
                       <p className="text-xs text-slate-500 truncate">
                         {user?.email}
                       </p>
-                    )}
+                    </div>
+                    <div className="p-2">
+                      {isAdmin && (
+                        <button
+                          onClick={() => navigate("admin")}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-indigo-600 font-semibold hover:bg-indigo-50 rounded-lg transition"
+                        >
+                          <LayoutDashboard size={16} /> Admin Dashboard
+                        </button>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-600 font-semibold hover:bg-red-50 rounded-lg transition"
+                      >
+                        <LogOut size={16} /> Log Out
+                      </button>
+                    </div>
                   </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-3 text-sm text-red-600 font-semibold hover:bg-red-50 transition-colors"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </>
+      {/* ==================== MAIN ==================== */}
+      <div className="max-w-5xl mx-auto p-4 sm:p-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <h2 className="text-3xl font-black text-slate-900">Upcoming</h2>
+            <p className="text-slate-500 font-medium">
+              Discover workshops, festivals, and campus notices.
+            </p>
+          </div>
+
+          <div className="bg-white px-4 py-2 rounded-lg border shadow-sm flex items-center gap-2">
+            <Search size={14} className="text-slate-400" />
+            <span className="text-xs font-bold text-slate-600">
+              Filtered{" "}
+              <span className="text-indigo-600">
+                {sortedEvents.length}
+              </span>{" "}
+              / {events.length}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-3">
+            <div className="sticky top-24">
+              <FiltersPanel
+                filters={filters}
+                setFilters={setFilters}
+                events={events}
+              />
+            </div>
+          </div>
+
+          <div className="lg:col-span-9">
+            {sortedEvents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed text-center">
+                <Calendar size={40} className="text-slate-300 mb-4" />
+                <h3 className="text-lg font-bold">No events found</h3>
+                <p className="text-slate-500 text-sm">
+                  Try adjusting your filters.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sortedEvents.map((event) => (
+                  <EventCard
+                    key={event.event_id}
+                    event={event}
+                    onClick={() =>
+                      navigate("event-detail", {
+                        eventId: event.event_id,
+                      })
+                    }
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* CONTENT */}
-      <div className="max-w-4xl mx-auto p-6">
-        <FiltersPanel
-          filters={filters}
-          setFilters={setFilters}
-          events={events}
-        />
-
-        <div className="text-sm text-gray-600 mb-4">
-          Showing <span className="text-gray-900">{sortedEvents.length}</span>{" "}
-          of {events.length} events
-        </div>
-
-        {sortedEvents.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-xl border border-dashed text-gray-400">
-            No events match your filters
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {sortedEvents.map((event) => (
-              <EventCard
-                key={event.event_id}
-                event={event}
-                onClick={() =>
-                  navigate("event-detail", { eventId: event.event_id })
-                }
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* ==================== ADMIN FAB (MOBILE) ==================== */}
+      {isAdmin && (
+        <button
+          onClick={() => navigate("admin")}
+          className="fixed bottom-6 right-6 w-16 h-16 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 md:hidden z-40 border-4 border-white"
+        >
+          <Plus size={32} />
+        </button>
+      )}
     </div>
   );
 };

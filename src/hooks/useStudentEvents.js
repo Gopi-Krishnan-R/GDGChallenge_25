@@ -3,7 +3,7 @@ import { collection, onSnapshot, query } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import { normalizeEvent } from "../utils/normalizeEvent";
 
-export function useEvents() {
+export function useStudentEvents() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 

@@ -69,18 +69,6 @@ const LoginPage = ({ navigate }) => {
           >
             Login
           </button>
-          <div className="bg-white border-b border-gray-200 px-6 py-4">
-            <div className="max-w-4xl mx-auto flex justify-between">
-              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <button
-                onClick={() => navigate('admin')}
-                className="text-sm text-gray-600"
-              >
-                Click here
-              </button>
-            </div>
-          </div>
-
           <button
             type="button"
             onClick={() => navigate("signup")}

@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from "react";
 
-export const useFilters = (events) => {
+export function useFilters(events = []) {
   const [filters, setFilters] = useState({
     departments: [],
     eventTypes: [],
@@ -10,24 +10,28 @@ export const useFilters = (events) => {
 
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
+      // ✅ Canonical tags with backward compatibility
+      const tags = event.tags ?? event.department_tags ?? [];
+
+      // Department filter
       if (
-        filters.departments.length &&
-        !event.department_tags.some((d) =>
-          filters.departments.includes(d)
-        )
+        filters.departments.length > 0 &&
+        !filters.departments.some((d) => tags.includes(d))
       ) {
         return false;
       }
 
+      // Event type filter
       if (
-        filters.eventTypes.length &&
+        filters.eventTypes.length > 0 &&
         !filters.eventTypes.includes(event.event_type)
       ) {
         return false;
       }
 
+      // Priority filter
       if (
-        filters.priorities.length &&
+        filters.priorities.length > 0 &&
         !filters.priorities.includes(event.priority)
       ) {
         return false;
@@ -37,5 +41,10 @@ export const useFilters = (events) => {
     });
   }, [events, filters]);
 
-  return { filters, setFilters, filteredEvents };
-};
+  return {
+    filters,
+    setFilters,
+    filteredEvents,
+  };
+}
+
