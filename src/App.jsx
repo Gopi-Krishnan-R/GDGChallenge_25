@@ -5,6 +5,8 @@ console.log("Firestore connected:", db);
 import { EVENTS_DATA } from "./data/events";
 import { useRouter } from "./hooks/useRouter";
 import { useSession } from "./hooks/useSession";
+import { useEvents } from "./hooks/useEvents";
+
 
 // Lazy load pages
 const SignupPage = lazy(() => import("./pages/SignupPage"));
@@ -18,19 +20,17 @@ const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 const App = () => {
   const { currentPage, params, navigate } = useRouter();
   const { user, role, loading: sessionLoading } = useSession();
-
+  const { events } = useEvents();
   const handlePublishEvent = async (event) => {
     try {
       await addDoc(collection(db, "events"), {
-        title: event.title,
-        summary: event.summary,
-        description: event.description,
+        title_raw: event.title,
+        summary_ai: event.summary,
+        description_raw: event.description,
+        department_tags: event.tags ?? [],
+        event_type: event.event_type ?? "general",
+        priority: event.priority ?? "normal",
 
-        // UI / filtering
-        tags: event.tags ?? [],
-
-        // 🔐 SECURITY / TARGETING (NEW, OPTIONAL)
-        // [] or missing => global event
         target_departments: event.target_departments ?? [],
 
         venue: event.venue ?? "",
@@ -69,7 +69,11 @@ const App = () => {
       )}
 
       {currentPage === "event-detail" && (
-        <EventDetailPage navigate={navigate} params={params} />
+        <EventDetailPage
+          navigate={navigate}
+          params={params}
+          events={events}
+        />
       )}
     </>
   );
