@@ -15,120 +15,125 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase/firebase";
 import { useSession } from "../hooks/useSession";
 import { useEvents } from "../hooks/useEvents";
+import { processEventWithAI } from "../services/gemini";
 
 const inputGlass =
   "w-full rounded-xl bg-white/70 backdrop-blur px-4 py-3 text-slate-900 placeholder-slate-400 shadow-inner shadow-black/5 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 transition";
 
-const AdminDashboard = ({ navigate, onPublishEvent }) => {
-  const { user, userName, role, loading } = useSession();
-  const { events, loading: eventsLoading } = useEvents();
-  const isAdmin = role === "admin";
+  const AdminDashboard = ({ navigate, onPublishEvent }) => {
+    const { user, userName, role, loading } = useSession();
+    const { events, loading: eventsLoading } = useEvents();
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar state
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  const [eventTitle, setEventTitle] = useState("");
-  const [rawText, setRawText] = useState("");
-  const [error, setError] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+    const [eventTitle, setEventTitle] = useState("");
+    const [rawText, setRawText] = useState("");
+    const [error, setError] = useState("");
+    const [isProcessing, setIsProcessing] = useState(false);
 
-  const [processedEvent, setProcessedEvent] = useState(null);
-  const [newTag, setNewTag] = useState("");
+    const [processedEvent, setProcessedEvent] = useState(null);
+    const [newTag, setNewTag] = useState("");
+    const isAdmin = role === "admin";
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-slate-400">
-        Loading session…
-      </div>
-    );
-  }
-
-  const resetCreateForm = () => {
-    setEventTitle("");
-    setRawText("");
-    setError("");
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigate("landing");
-  };
-
-  const processWithAI = () => {
-    if (!eventTitle.trim() || !rawText.trim()) {
-      setError("Please enter both event title and details.");
-      return;
+    if (loading && isAdmin) {
+      return (
+        <div className="min-h-screen flex items-center justify-center text-slate-400">
+          Loading session…
+        </div>
+      );
     }
 
-    setIsProcessing(true);
+    const handleLogout = async () => {
+      await signOut(auth);
+      navigate("landing");
+    };
 
-    setTimeout(() => {
-      const newEvent = {
-        event_id: `evt_${Date.now()}`,
-        title_ai: eventTitle,
-        description_ai: rawText,
-        summary_ai: rawText.split(".").slice(0, 2).join(".") + ".",
-        department_tags: ["College Event"],
-        venue: "",
-        start_time: "",
-        end_time: ""
-      };
+    const resetCreateForm = () => {
+      setEventTitle("");
+      setRawText("");
+      setError("");
+      setProcessedEvent(null);
+    };
 
-      setProcessedEvent(newEvent);
-      setIsProcessing(false);
-      setShowCreateModal(false);
+    const processWithAI = async () => {
+      if (!eventTitle.trim() || !rawText.trim()) {
+        setError("Please enter both event title and details.");
+        return;
+      }
+
+      setError("");
+      setIsProcessing(true);
+
+      try {
+        const aiResult = await processEventWithAI({
+          title: eventTitle,
+          rawText
+        });
+
+        setProcessedEvent({
+          event_id: `evt_${Date.now()}`,
+          ...aiResult
+        });
+
+        setShowCreateModal(false);
+        setShowPreviewModal(true);
+      } catch (err) {
+        console.log(err);
+        setError("AI generation failed. Please try again.");
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    const saveEvent = () => {
+      if (!processedEvent) return;
+
+      onPublishEvent({
+        title: processedEvent.title_ai,
+        summary: processedEvent.summary_ai,
+        description: processedEvent.description_ai,
+        tags: processedEvent.department_tags || [],
+        venue: processedEvent.venue,
+        start_time: processedEvent.start_time,
+        end_time: processedEvent.end_time
+      });
+
+      setShowPreviewModal(false);
+      resetCreateForm();
+    };
+
+    const openExistingEvent = event => {
+      setProcessedEvent({
+        event_id: event.event_id,
+        title_ai: event.title,
+        summary_ai: event.summary,
+        description_ai: event.description,
+        department_tags: event.tags || [],
+        venue: event.venue || "",
+        start_time: event.start_time || "",
+        end_time: event.end_time || ""
+      });
       setShowPreviewModal(true);
-    }, 600);
-  };
+    };
 
+    const addTag = () => {
+      if (!newTag.trim() || !processedEvent) return;
+      setProcessedEvent(p => ({
+        ...p,
+        department_tags: [...(p.department_tags || []), newTag.trim()]
+      }));
+      setNewTag("");
+    };
 
-  const saveEvent = () => {
-    if (!processedEvent) return;
-    onPublishEvent({
-      title: processedEvent.title_ai,
-      summary: processedEvent.summary_ai || processedEvent.description_ai.split(".").slice(0, 2).join(".") + ".",
-      description: processedEvent.description_ai,
-      tags: processedEvent.department_tags || [],
-      venue: processedEvent.venue,
-      start_time: processedEvent.start_time,
-      end_time: processedEvent.end_time
-    });
-    setShowPreviewModal(false);
-    setProcessedEvent(null);
-    resetCreateForm();
-  };
-
-  const openExistingEvent = event => {
-    setProcessedEvent({
-      event_id: event.event_id,
-      title_ai: event.title,
-      summary_ai: event.summary,
-      description_ai: event.description,
-      department_tags: event.tags || [],
-      venue: event.venue || "",
-      start_time: event.start_time || "",
-      end_time: event.end_time || ""
-    });
-    setShowPreviewModal(true);
-  };
-
-  const removeTag = i => {
-    setProcessedEvent(p => ({
-      ...p,
-      department_tags: p.department_tags.filter((_, idx) => idx !== i)
-    }));
-  };
-
-  const addTag = () => {
-    if (!newTag.trim() || !processedEvent) return;
-    setProcessedEvent(p => ({
-      ...p,
-      department_tags: [...(p.department_tags || []), newTag.trim()]
-    }));
-    setNewTag("");
-  };
+    const removeTag = index => {
+      setProcessedEvent(p => ({
+        ...p,
+        department_tags: p.department_tags.filter((_, i) => i !== index)
+      }));
+    };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 flex flex-col md:flex-row">
