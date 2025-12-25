@@ -61,9 +61,11 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
       setError("Please enter both event title and details.");
       return;
     }
+
     setIsProcessing(true);
+
     setTimeout(() => {
-      setProcessedEvent({
+      const newEvent = {
         event_id: `evt_${Date.now()}`,
         title_ai: eventTitle,
         description_ai: rawText,
@@ -72,12 +74,15 @@ const AdminDashboard = ({ navigate, onPublishEvent }) => {
         venue: "",
         start_time: "",
         end_time: ""
-      });
+      };
+
+      setProcessedEvent(newEvent);
       setIsProcessing(false);
       setShowCreateModal(false);
       setShowPreviewModal(true);
     }, 600);
   };
+
 
   const saveEvent = () => {
     if (!processedEvent) return;

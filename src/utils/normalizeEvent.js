@@ -36,7 +36,7 @@ export function normalizeEvent(doc) {
       data.description_ai ??
       "",
 
-    // tags (canonical)
+    // tags
     tags:
       data.tags ??
       data.department_tags ??

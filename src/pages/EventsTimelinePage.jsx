@@ -3,7 +3,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase/firebase";
 import { useSession } from "../hooks/useSession";
 import { useFilters } from "../hooks/useFilters";
-import { useStudentEvents } from "../hooks/useStudentEvents";
+import { useEvents } from "../hooks/useEvents";
 import {
   Plus,
   ShieldCheck,
@@ -18,7 +18,7 @@ import EventCard from "../components/EventCard";
 const EventsTimelinePage = ({ navigate }) => {
   // -------------------- SESSION & EVENTS --------------------
   const { user, userName, profileExists, loading } = useSession();
-  const { events, loading: eventsLoading } = useStudentEvents();
+  const { events, loading: eventsLoading } = useEvents();
   const { filters, setFilters, filteredEvents } = useFilters(events);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

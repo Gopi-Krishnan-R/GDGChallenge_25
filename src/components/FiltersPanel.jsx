@@ -11,7 +11,7 @@ const FiltersPanel = ({ filters, setFilters, events }) => {
     ...new Set(events.map((e) => e.event_type)),
   ];
 
-  const priorities = ["normal", "important", "critical"];
+  const priorities = ["low", "normal", "high"];
 
   const toggle = (key, value) => {
     setFilters((prev) => ({

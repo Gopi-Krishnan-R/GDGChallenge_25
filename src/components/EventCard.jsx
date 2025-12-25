@@ -1,12 +1,11 @@
 import { ChevronRight, Calendar, MapPin } from "lucide-react";
 
-/* ---------- STYLE MAPS ---------- */
-
 const priorityStyles = {
-  critical: "bg-red-50 border-red-300 text-red-800",
-  important: "bg-orange-50 border-orange-300 text-orange-800",
+  high: "bg-red-50 border-red-300 text-red-800",
   normal: "bg-blue-50 border-blue-300 text-blue-800",
+  low: "bg-gray-50 border-gray-300 text-gray-700",
 };
+
 
 const eventTypeStyles = {
   hackathon: "bg-indigo-100 text-indigo-800",
@@ -18,13 +17,10 @@ const eventTypeStyles = {
   general: "bg-gray-100 text-gray-800",
 };
 
-/* ---------- HELPERS ---------- */
-
 const formatDate = (value) => {
-  if (!value) return "TBD";
-
+  if (!value || value === "TBD") return "TBD";
   const date = new Date(value);
-  if (isNaN(date.getTime())) return "TBD";
+  if (isNaN(date.getTime())) return value;
 
   return date.toLocaleDateString("en-US", {
     month: "short",
@@ -34,11 +30,9 @@ const formatDate = (value) => {
   });
 };
 
-/* ---------- COMPONENT ---------- */
-
 const EventCard = ({ event, onClick }) => {
-  const eventType = event.event_type || "general";
-  const priority = event.priority || "normal";
+  const eventType = (event.event_type || "general").toLowerCase();
+  const priority = (event.priority || "normal").toLowerCase();
   const tags = Array.isArray(event.tags) ? event.tags : [];
 
   return (
@@ -68,7 +62,6 @@ const EventCard = ({ event, onClick }) => {
             )}
           </div>
 
-          {/* ✅ NORMALIZED TITLE */}
           <h3 className="font-semibold text-gray-900">
             {event.title}
           </h3>
@@ -77,7 +70,6 @@ const EventCard = ({ event, onClick }) => {
         <ChevronRight size={20} className="text-gray-400" />
       </div>
 
-      {/* ✅ NORMALIZED SUMMARY */}
       {event.summary && (
         <p className="text-sm text-gray-700 mb-3">
           {event.summary}
@@ -96,7 +88,6 @@ const EventCard = ({ event, onClick }) => {
         </span>
       </div>
 
-      {/* ✅ NORMALIZED TAGS */}
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
           {tags.map((tag, idx) => (
@@ -114,4 +105,3 @@ const EventCard = ({ event, onClick }) => {
 };
 
 export default EventCard;
-

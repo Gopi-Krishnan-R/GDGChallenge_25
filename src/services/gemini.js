@@ -1,14 +1,9 @@
-// src/services/gemini.js
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize Gemini client
 const ai = new GoogleGenAI({
   apiKey: import.meta.env.VITE_GEMINI_API_KEY,
 });
 
-/**
- * Retry wrapper for transient Gemini failures
- */
 async function generateWithRetry(prompt, retries = 2, delayMs = 1200) {
   try {
     return await ai.models.generateContent({
@@ -30,9 +25,6 @@ async function generateWithRetry(prompt, retries = 2, delayMs = 1200) {
   }
 }
 
-/**
- * Main AI processing function
- */
 export async function processEventWithAI({ title, rawText, feedback }) {
   const prompt = buildPrompt(title, rawText, feedback);
 
@@ -56,8 +48,6 @@ export async function processEventWithAI({ title, rawText, feedback }) {
     };
   } catch (error) {
     console.error("Gemini API Error:", error);
-
-    // Hard fallback (UI must never break)
     return {
       title_ai: title,
       summary_ai:
@@ -73,9 +63,6 @@ export async function processEventWithAI({ title, rawText, feedback }) {
   }
 }
 
-/**
- * Prompt builder — this is where effectiveness is controlled
- */
 function buildPrompt(title, rawText, feedback) {
   return `
 You are an AI assistant for a college event notification system.
@@ -83,57 +70,31 @@ You are an AI assistant for a college event notification system.
 Your job is to convert raw event text into a structured event object.
 This output is rendered directly in a production UI.
 
-====================
-PRIMARY INPUT
-====================
-
 Event title:
 ${title}
 
 Raw event description:
 ${rawText}
 
-====================
-CORRECTION OVERRIDE
-====================
-
 ${feedback ? `
 IMPORTANT:
-The user has provided corrections to your previous output.
-
-You MUST apply these instructions EXACTLY.
-If there is any conflict, the feedback OVERRIDES EVERYTHING.
-
+The user has provided corrections.
+You MUST apply them exactly.
 User correction:
 ${feedback}
-` : `
-No corrections provided.
-`}
+` : ``}
 
-====================
-STRICT RULES
-====================
+Rules:
+- Be factual
+- Do not invent information
+- Extract dates and venue if present
+- Use "TBD" when unclear
+- summary_ai must be high-level and concise
+- If bullets are used, prefix with "•"
+- Convert dates to ISO 8601 when possible
+- Output valid JSON only
 
-- Be factual and conservative
-- Do NOT invent information
-- Extract dates and venue 
-- If any field is missing or unclear, use "TBD"
-- summary_ai:
-  - High-level overview only
-  - Do NOT repeat venue or dates
-  - If bullet points requested:
-    • Use "•"
-    • 3–5 bullets max
-- start_time and end_time:
-  - If dates are present,try to convert it to ISO 8601
-- Output MUST be valid JSON only
-- No markdown, no headings, no commentary
-
-====================
-OUTPUT SCHEMA
-====================
-
-Return ONLY valid JSON:
+Return JSON in this exact shape:
 
 {
   "title_ai": string,
@@ -149,9 +110,6 @@ Return ONLY valid JSON:
 `;
 }
 
-/**
- * Sanitize Gemini output
- */
 function parseAIResponse(text) {
   const clean = text
     .replace(/^```json\s*/i, "")
