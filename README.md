@@ -217,3 +217,11 @@ Update your Firebase credentials in:
 
 - [x] MVP feature-complete
 
+## What to work on
+
+1. The routing. It's quite a bit too wonky and unreliable.
+2. The login function. It now heavily depends on @cet.ac.in mails.
+3. Tagging system. It is used to target specific notifications to a specific set of people.
+4. The signin, and the auth states. Yes they could use a bit more love, when progressing into stage 2.
+5. Data storage in Firebase. It could be made more modular if plans to shift to another database/BaaS/whatever.
+
